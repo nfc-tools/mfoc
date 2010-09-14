@@ -21,6 +21,7 @@
  Contact: <mifare@nethemba.com>
 
  Porting to libnfc 1.3.3: Michal Boska <boska.michal@gmail.com>
+ Porting to libnfc 1.3.9: Romuald Conty <romuald@libnfc.org>
  
  URL http://eprint.iacr.org/2009/137.pdf
  URL http://www.sos.cs.ru.nl/applications/rfid/2008-esorics.pdf
@@ -28,17 +29,21 @@
  URL http://www.cs.ru.nl/~petervr/papers/grvw_2009_pickpocket.pdf
 */
 
-#ifndef PACKAGE_STRING
-	#define PACKAGE_STRING "0.08"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+
+// NFC
 #include <nfc/nfc.h>
-#include <nfc/mifaretag.h>
+
+// Crapto1
 #include "crapto1.h"
+
+// Internal
+#include "config.h"
+#include "mifare.h"
+#include "nfc-utils.h"
 #include "mfoc.h"
 
 int main(int argc, char * const argv[]) {
@@ -61,13 +66,14 @@ int main(int argc, char * const argv[]) {
 	
 	// Array with default Mifare Classic keys
 	byte_t defaultKeys[][6] = {
-		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // First key
-		{0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5},  // Second key
-		{0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5}, // Third key
-		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // User defined key slot
+		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // Default key (first key used by program if no user defined key)
+		{0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
+		{0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
+		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // Blank key
+		{0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5},
 		{0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd},
 		{0x1a, 0x98, 0x2c, 0x7e, 0x45, 0x9a},
-		{0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7},
 		{0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
 		{0x71, 0x4c, 0x5c, 0x88, 0x6e, 0x97},
 		{0x58, 0x7e, 0xe5, 0xf9, 0x35, 0x0f},
@@ -89,7 +95,7 @@ int main(int argc, char * const argv[]) {
 	bKeys		*bk;
 	
 	static mifare_param mp;
- 	static mifare_tag mtDump;
+ 	static mifare_classic_tag mtDump;
 	
 	mifare_cmd mc;
 	FILE *pfDump = NULL;
@@ -459,9 +465,9 @@ int main(int argc, char * const argv[]) {
 }
 
 void usage(FILE * stream, int errno) {
-	fprintf(stream, "mfoc %s\n\n", PACKAGE_STRING);
+	fprintf(stream, "mfoc %s\n\n", PACKAGE_VERSION);
 	fprintf(stream, "usage: mfoc [-h] [-P probnum] [-T tolerance] [-k custom_key] [-O output]\n\n");
-	fprintf(stream, "example: mfoc\n");
+	fprintf(stream, "example: mfoc -O card_dump\n");
 	fprintf(stream, "example: mfoc -k ffffeeeedddd -O card_dump\n");
 	fprintf(stream, "example: mfoc -P 50 -O card_dump\n");
 	fprintf(stream, "\n");					
@@ -502,7 +508,7 @@ void mf_configure(nfc_device_t* pdi) {
 
 void mf_select_tag(nfc_device_t* pdi, nfc_target_info_t* ti) {
 	// Poll for a ISO14443A (MIFARE) tag
-	if (!nfc_initiator_select_tag(pdi,NM_ISO14443A_106,NULL,0,ti)) {
+	if (!nfc_initiator_select_passive_target(pdi,NM_ISO14443A_106,NULL,0,ti)) {
 		fprintf(stderr, "!Error connecting to the MIFARE Classic tag\n");
 		nfc_disconnect(pdi);
 		exit(1);
@@ -541,7 +547,7 @@ int find_exploit_sector(mftag t) {
 }
 
 void mf_anticollision(mftag t, mfreader r) {
-	if (!nfc_initiator_select_tag(r.pdi, NM_ISO14443A_106, NULL, 0, &t.ti)) {
+	if (!nfc_initiator_select_passive_target(r.pdi, NM_ISO14443A_106, NULL, 0, &t.ti)) {
 		fprintf(stderr, "\n\n!Error: tag has been removed\n");
 		exit(1);
 	}
@@ -580,13 +586,26 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	// print_hex(Auth, 4);
 	
 	// We need full control over the CRC
-	nfc_configure(r.pdi,NDO_HANDLE_CRC,false);
-	
+	if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, false))  {
+		nfc_perror (r.pdi, "nfc_configure");
+		exit (EXIT_FAILURE);
+	}
+
 	// Request plain tag-nonce
 	// fprintf(stdout, "\t[Nt]:\t");
+	if (!nfc_configure (r.pdi, NDO_EASY_FRAMING, false)) {
+		nfc_perror (r.pdi, "nfc_configure");
+		exit (EXIT_FAILURE);
+	}
+
 	if (!nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, &RxLen)) {
-		fprintf(stdout, "Error requesting plain tag-nonce\n");
-		exit(1);
+		fprintf(stdout, "Error while requesting plain tag-nonce\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (!nfc_configure (r.pdi, NDO_EASY_FRAMING, true)) {
+		nfc_perror (r.pdi, "nfc_configure");
+		exit (EXIT_FAILURE);
 	}
 	// print_hex(Rx, 4);
 	

@@ -6,3 +6,4 @@ Pavol Luptak - project leader, minor coding, testing and bugreporting
 = Contributors
 
 Michal Boska <boska.michal@gmail.com> - porting to libnfc 1.3.3
+Romuald Conty <romuald@libnfc.org> - porting to libnfc 1.3.9

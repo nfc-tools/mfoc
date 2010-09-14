@@ -1,7 +1,7 @@
 bin_PROGRAMS = mfoc
 
-# set the include path found by configure
-mfoc_SOURCES = mfoc.c crapto1.c crypto1.c
-mfoc_LDADD = -lnfc
+noinst_HEADERS = crapto1.h mfoc.h mifare.h nfc-utils.h
+mfoc_SOURCES = crapto1.c crypto1.c mfoc.c mifare.c nfc-utils.c
+mfoc_LDADD = @LIBNFC_LIBS@
 
 # dist_man_MANS = mfoc.1

@@ -1,35 +1,23 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
+AC_INIT([mfoc], [0.09], [mifare@nethemba.com])
 
-AC_PREREQ([2.61])
-AC_INIT([mfoc], [0.08], [mifare@nethemba.com])
-AM_INIT_AUTOMAKE(@PACKAGE_NAME@, @PACKAGE_VERSION@)
+AC_CONFIG_MACRO_DIR([m4])
 
+AC_PROG_CC
 
-AC_CONFIG_SRCDIR([src/mfoc.c])
 AC_CONFIG_HEADERS([config.h])
 
-# Checks for NFC libraries.
+AC_CONFIG_SRCDIR([src/mfoc.c])
 
-NFC_DIR="/usr/local/"
-AC_ARG_WITH(libnfc,[  --with-libnfc=DIR     	location of the libnfc],
-	[if test "$withval" != no; then
-		if test "$withval" != yes; then
-			NFC_DIR=$withval
-		fi
-	 fi])
-CFLAGS="$CFLAGS -L$NFC_DIR/lib/ -I$NFC_DIR/include/libnfc/"
+AM_INIT_AUTOMAKE
 
-# Checks for programs.
-AC_PROG_CC
-# Checks for header files.
+m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-echo $NFC_DIR
+# Checks for pkg-config modules.
+  LIBNFC_REQUIRED_VERSION=1.3.9
+  PKG_CHECK_MODULES([LIBNFC], [libnfc >= $LIBNFC_REQUIRED_VERSION], [], [AC_MSG_ERROR([libnfc >= $LIBNFC_REQUIRED_VERSION is mandatory.])])
 
-AC_CHECK_HEADERS([stdio.h stdlib.h string.h $NFC_DIR/include/libnfc/libnfc.h $NFC_DIR/include/libnfc/defines.h unistd.h],[], [ echo "Error! You need to have libnfc >= 1.2.1."; exit -1; ])
-
-# Checks for libraries
-#AC_CHECK_LIB(nfc,nfc_configure, [], [ echo "Error! You need to have liblibnfc >= 1.2.1."; exit -1; ])
+  PKG_CONFIG_REQUIRES="libnfc"
+  AC_SUBST([PKG_CONFIG_REQUIRES])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
@@ -39,11 +27,6 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-
-#PKG_CHECK_MODULES(LIBNFC, libnfc, [WITH_LIBNFC="1"], [WITH_LIBNFC="0"])
-#if test "$WITH_LIBNFC" = "0"; then 
-#	AC_MSG_ERROR([libnfc is mandatory.])
-#fi
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
