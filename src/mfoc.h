@@ -40,7 +40,7 @@ typedef struct {
 } denonce;                                      // Revealed information about nonce 
  
 typedef struct {
-        nfc_target_info_t  ti;
+        nfc_target_t	nt;
         sector *        sectors;                // Allocate later, we do not know the number of sectors yet
 	sector		e_sector;		// Exploit sector
         uint32_t        num_sectors;
@@ -72,7 +72,7 @@ typedef struct {
 void usage(FILE * stream, int errno);
 void mf_init(mftag *t, mfreader *r);
 void mf_configure(nfc_device_t* pdi);
-void mf_select_tag(nfc_device_t* pdi, nfc_target_info_t* ti);
+void mf_select_tag(nfc_device_t* pdi, nfc_target_t* pnt);
 int trailer_block(uint32_t block);
 int find_exploit_sector(mftag t);
 void mf_anticollision(mftag t, mfreader r);

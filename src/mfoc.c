@@ -158,11 +158,11 @@ int main(int argc, char * const argv[]) {
 	mf_init(&t, &r);
 	// Configure reader settings
 	mf_configure(r.pdi);
-	mf_select_tag(r.pdi, &t.ti);
+	mf_select_tag(r.pdi, &(t.nt));
 	
 	// Save tag uid and info about block size (b4K)
-	t.b4K = (t.ti.nai.abtAtqa[1] == 0x02);
-	t.uid = (uint32_t) bytes_to_num(t.ti.nai.abtUid, 4);
+	t.b4K = (t.nt.nti.nai.abtAtqa[1] == 0x02);
+	t.uid = (uint32_t) bytes_to_num(t.nt.nti.nai.abtUid, 4);
 
 	t.num_blocks = (t.b4K) ? 0xff : 0x3f;
 	t.num_sectors = t.b4K ? NR_TRAILERS_4k : NR_TRAILERS_1k;
@@ -191,7 +191,7 @@ int main(int argc, char * const argv[]) {
 	}		
 	
 	// Test if a compatible MIFARE tag is used
-	if ((t.ti.nai.btSak & 0x08) == 0) {
+	if ((t.nt.nti.nai.btSak & 0x08) == 0) {
 		printf("Error: inserted tag is not a MIFARE Classic card\n");
 		nfc_disconnect(r.pdi);
 		exit(1);
@@ -206,7 +206,7 @@ int main(int argc, char * const argv[]) {
 	
 	// Try to authenticate to all sectors with default keys
 	// Set the authentication information (uid)
-	memcpy(mp.mpa.abtUid, t.ti.nai.abtUid, sizeof(mp.mpa.abtUid));
+	memcpy(mp.mpa.abtUid, t.nt.nti.nai.abtUid, sizeof(mp.mpa.abtUid));
 	// Iterate over all keys (n = number of keys)
 	n = sizeof(defaultKeys)/sizeof(defaultKeys[0]);
 	for (key = 0; key < n; key++) {
@@ -276,7 +276,7 @@ int main(int argc, char * const argv[]) {
 	for (m = 0; m < 2; ++m) {
 		if (e_sector == -1) break; // All keys are default, I am skipping recovery mode
 		for (j = 0; j < (t.num_sectors); ++j) {
-			memcpy(mp.mpa.abtUid, t.ti.nai.abtUid, sizeof(mp.mpa.abtUid));
+			memcpy(mp.mpa.abtUid, t.nt.nti.nai.abtUid, sizeof(mp.mpa.abtUid));
 			if ((dumpKeysA && !t.sectors[j].foundKeyA) || (!dumpKeysA && !t.sectors[j].foundKeyB)) {
 				
 				// First, try already broken keys
@@ -407,7 +407,7 @@ int main(int argc, char * const argv[]) {
 					fprintf(stdout, "Block %02d, type %c, key %012llx :", block, 'A', bytes_to_num(t.sectors[i].KeyA, 6));
 					print_hex(mp.mpd.abtData, 16);
 					mf_configure(r.pdi);
-					mf_select_tag(r.pdi, &t.ti);
+					mf_select_tag(r.pdi, &(t.nt));
 					failure = false;
 				} else {
 					// Error, now try read() with B key
@@ -424,7 +424,7 @@ int main(int argc, char * const argv[]) {
 							fprintf(stdout, "Block %02d, type %c, key %012llx :", block, 'B', bytes_to_num(t.sectors[i].KeyB, 6));
 							print_hex(mp.mpd.abtData, 16);
 							mf_configure(r.pdi);
-							mf_select_tag(r.pdi, &t.ti);
+							mf_select_tag(r.pdi, &(t.nt));
 							failure = false;
 						} else {
 							mf_configure(r.pdi);
@@ -440,7 +440,7 @@ int main(int argc, char * const argv[]) {
 				memcpy(mtDump.amb[block].mbt.abtKeyB,t.sectors[i].KeyB,6);
 				if (!failure) memcpy(mtDump.amb[block].mbt.abtAccessBits,mp.mpd.abtData+6,4);
 			} else if (!failure) memcpy(mtDump.amb[block].mbd.abtData, mp.mpd.abtData,16);
-			memcpy(mp.mpa.abtUid,t.ti.nai.abtUid,4);
+			memcpy(mp.mpa.abtUid,t.nt.nti.nai.abtUid,4);
 		}
 			
 		// Finally save all keys + data to file
@@ -506,9 +506,13 @@ void mf_configure(nfc_device_t* pdi) {
 	nfc_configure(pdi,NDO_ACTIVATE_FIELD,true);
 }
 
-void mf_select_tag(nfc_device_t* pdi, nfc_target_info_t* ti) {
+void mf_select_tag(nfc_device_t* pdi, nfc_target_t* pnt) {
 	// Poll for a ISO14443A (MIFARE) tag
-	if (!nfc_initiator_select_passive_target(pdi,NM_ISO14443A_106,NULL,0,ti)) {
+	const nfc_modulation_t nm = {
+		.nmt = NMT_ISO14443A,
+		.nbr = NBR_106,
+	};
+	if (!nfc_initiator_select_passive_target(pdi, nm, NULL, 0, pnt)) {
 		fprintf(stderr, "!Error connecting to the MIFARE Classic tag\n");
 		nfc_disconnect(pdi);
 		exit(1);
@@ -547,7 +551,11 @@ int find_exploit_sector(mftag t) {
 }
 
 void mf_anticollision(mftag t, mfreader r) {
-	if (!nfc_initiator_select_passive_target(r.pdi, NM_ISO14443A_106, NULL, 0, &t.ti)) {
+	const nfc_modulation_t nm = {
+		.nmt = NMT_ISO14443A,
+		.nbr = NBR_106,
+	};
+	if (!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt)) {
 		fprintf(stderr, "\n\n!Error: tag has been removed\n");
 		exit(1);
 	}
@@ -581,7 +589,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	
 	// Prepare AUTH command
 	Auth[0] = (t.sectors[e_sector].foundKeyA) ? 0x60 : 0x61;
-	append_iso14443a_crc(Auth,2);
+	iso14443a_crc_append (Auth,2);
 	// fprintf(stdout, "\nAuth command:\t");
 	// print_hex(Auth, 4);
 	
@@ -724,7 +732,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 		// Again, prepare the Auth command with MC_AUTH_A, recover the block and CRC
 		Auth[0] = dumpKeysA ? 0x60 : 0x61;
 		Auth[1] = a_sector; 
-		append_iso14443a_crc(Auth,2);
+		iso14443a_crc_append (Auth,2);
 		
 		// Encryption of the Auth command, sending the Auth command
 		for (i = 0; i < 4; i++) {
