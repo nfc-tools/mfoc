@@ -1,4 +1,4 @@
-AC_INIT([mfoc], [0.09], [mifare@nethemba.com])
+AC_INIT([mfoc], [0.10], [mifare@nethemba.com])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -13,11 +13,11 @@ AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 # Checks for pkg-config modules.
-  LIBNFC_REQUIRED_VERSION=1.4.0
-  PKG_CHECK_MODULES([LIBNFC], [libnfc >= $LIBNFC_REQUIRED_VERSION], [], [AC_MSG_ERROR([libnfc >= $LIBNFC_REQUIRED_VERSION is mandatory.])])
+LIBNFC_REQUIRED_VERSION=1.4.0
+PKG_CHECK_MODULES([LIBNFC], [libnfc >= $LIBNFC_REQUIRED_VERSION], [], [AC_MSG_ERROR([libnfc >= $LIBNFC_REQUIRED_VERSION is mandatory.])])
 
-  PKG_CONFIG_REQUIRES="libnfc"
-  AC_SUBST([PKG_CONFIG_REQUIRES])
+PKG_CONFIG_REQUIRES="libnfc"
+AC_SUBST([PKG_CONFIG_REQUIRES])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
