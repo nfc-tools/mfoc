@@ -126,7 +126,7 @@ int main(int argc, char * const argv[]) {
 					exit(1);
 				} else {
 					bzero(defKey, 6);
-					num_to_bytes(strtol(optarg, NULL, 16), 6, defKey);
+					num_to_bytes(strtoll(optarg, NULL, 16), 6, defKey);
 					memcpy(defaultKeys[0], defKey, 6);
 				}
 				fprintf(stdout, "The custom key 0x%012llx has been added to the default keys\n", bytes_to_num(defKey, 6));
