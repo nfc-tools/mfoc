@@ -1,6 +1,6 @@
 /*  
  
- Mifare Classic Offline Cracker version 0.08
+ Mifare Classic Offline Cracker
  
  Requirements: crapto1 library http://code.google.com/p/crapto1
  libnfc                        http://www.libnfc.org
@@ -22,6 +22,7 @@
 
  Porting to libnfc 1.3.3: Michal Boska <boska.michal@gmail.com>
  Porting to libnfc 1.3.9: Romuald Conty <romuald@libnfc.org>
+ Porting to libnfc 1.4.x: Romuald Conty <romuald@libnfc.org>
  
  URL http://eprint.iacr.org/2009/137.pdf
  URL http://www.sos.cs.ru.nl/applications/rfid/2008-esorics.pdf
@@ -488,7 +489,7 @@ void mf_init(mftag *t, mfreader *r) {
 	// Connect to the first NFC device
 	r->pdi = nfc_connect(NULL);
 	if (!r->pdi) {
-		ERR ("Unable to connection to NFC device\n");
+		ERR ("Unable to connect to NFC device\n");
 		exit (EXIT_FAILURE);
 	}
 }
@@ -513,7 +514,7 @@ void mf_select_tag(nfc_device_t* pdi, nfc_target_t* pnt) {
 		.nbr = NBR_106,
 	};
 	if (!nfc_initiator_select_passive_target(pdi, nm, NULL, 0, pnt)) {
-		ERR ("!Error connecting to the MIFARE Classic tag");
+		ERR ("Unable to connect to the MIFARE Classic tag");
 		nfc_disconnect(pdi);
 		exit (EXIT_FAILURE);
 	}
@@ -741,7 +742,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			AuthEncPar[i] = filter(pcs->odd) ^ oddparity(Auth[i]);
 		}
 		if (!nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, &RxLen, RxPar)) {
-			fprintf(stdout, "Error requesting encrypted tag-nonce\n");
+			ERR ("while requesting encrypted tag-nonce");
 			exit (EXIT_FAILURE);
 		}
 		
