@@ -1,3 +1,33 @@
+/*-
+ * Public platform independent Near Field Communication (NFC) library examples
+ * 
+ * Copyright (C) 2009, Roel Verdult
+ * Copyright (C) 2010, Romuald Conty, Romain Tartière
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *  1) Redistributions of source code must retain the above copyright notice,
+ *  this list of conditions and the following disclaimer. 
+ *  2 )Redistributions in binary form must reproduce the above copyright
+ *  notice, this list of conditions and the following disclaimer in the
+ *  documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * Note that this license only applies on the examples, NFC library itself is under LGPL
+ *
+ */
+
 #include "mifare.h"
 
 #include <string.h>
@@ -21,13 +51,10 @@ bool
 nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param * pmp)
 {
   byte_t  abtRx[265];
-  size_t  szRxLen;
+  size_t  szRx = sizeof(abtRx);
   size_t  szParamLen;
   byte_t  abtCmd[265];
-
-  // Make sure we are dealing with a active device
-  if (!pnd->bActive)
-    return false;
+  bool    bEasyFraming;
 
   abtCmd[0] = mc;               // The MIFARE Classic command
   abtCmd[1] = ui8Block;         // The block address (1K=0x00..0x39, 4K=0x00..0xff)
@@ -67,15 +94,32 @@ nfc_initiator_mifare_cmd (nfc_device_t * pnd, const mifare_cmd mc, const uint8_t
   if (szParamLen)
     memcpy (abtCmd + 2, (byte_t *) pmp, szParamLen);
 
-  // Fire the mifare command
-  if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRxLen)) {
-    if (pnd->iLastError != 0x14)
-      nfc_perror (pnd, "nfc_initiator_transceive_bytes");
+  bEasyFraming = pnd->bEasyFraming;
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, true)) {
+    nfc_perror (pnd, "nfc_configure");
     return false;
   }
+  // Fire the mifare command
+  if (!nfc_initiator_transceive_bytes (pnd, abtCmd, 2 + szParamLen, abtRx, &szRx)) {
+    if (pnd->iLastError == EINVRXFRAM) {
+      // "Invalid received frame" AKA EINVRXFRAM,  usual means we are
+      // authenticated on a sector but the requested MIFARE cmd (read, write)
+      // is not permitted by current acces bytes;
+      // So there is nothing to do here.
+    } else {
+      nfc_perror (pnd, "nfc_initiator_transceive_bytes");
+    }
+    nfc_configure (pnd, NDO_EASY_FRAMING, bEasyFraming);
+    return false;
+  }
+  if (!nfc_configure (pnd, NDO_EASY_FRAMING, bEasyFraming)) {
+    nfc_perror (pnd, "nfc_configure");
+    return false;
+  }
+
   // When we have executed a read command, copy the received bytes into the param
   if (mc == MC_READ) {
-    if (szRxLen == 16) {
+    if (szRx == 16) {
       memcpy (pmp->mpd.abtData, abtRx, 16);
     } else {
       return false;
