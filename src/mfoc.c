@@ -106,24 +106,24 @@ int main(int argc, char * const argv[]) {
 			case 'P':
 				// Number of probes
 				if (!(probes = atoi(optarg)) || probes < 1) {
-					fprintf(stderr, "The number of probes must be a positive number\n"); 
-					exit(1);
+					ERR ("The number of probes must be a positive number"); 
+					exit (EXIT_FAILURE);
 				}
 				// fprintf(stdout, "Number of probes: %d\n", probes);
 				break;
 			case 'T':
 				// Nonce tolerance range
 				if (!(d.tolerance = atoi(optarg)) || d.tolerance < 0) {
-					fprintf(stderr, "The nonce distances range must be a zero or a positive number\n"); 
-					exit(1);
+					ERR ("The nonce distances range must be a zero or a positive number"); 
+					exit (EXIT_FAILURE);
 				}
 				// fprintf(stdout, "Tolerance number: %d\n", probes);
 				break;
 			case 'k':
 				// Add this key to the default keys list
 				if ((defKey = calloc(6, sizeof(byte_t))) == NULL) {
-					fprintf(stderr, "Cannot allocate memory for defKey\n");
-					exit(1);
+					ERR ("Cannot allocate memory for defKey");
+					exit (EXIT_FAILURE);
 				} else {
 					bzero(defKey, 6);
 					num_to_bytes(strtoll(optarg, NULL, 16), 6, defKey);
@@ -136,7 +136,7 @@ int main(int argc, char * const argv[]) {
 				// File output
 				if (!(pfDump = fopen(optarg, "wb"))) {
 					fprintf(stderr, "Cannot open: %s, exiting\n", optarg); 
-					exit(1);
+					exit (EXIT_FAILURE);
 				}
 				// fprintf(stdout, "Output file: %s\n", optarg);
 				break;
@@ -150,8 +150,8 @@ int main(int argc, char * const argv[]) {
 	}
 	
 	if (!pfDump) {
-		fprintf(stderr, "Error, parameter -O is mandatory\n");
-		exit(1);
+		ERR ("parameter -O is mandatory");
+		exit (EXIT_FAILURE);
 	}
 	
 	// Initialize reader/tag structures
@@ -169,16 +169,16 @@ int main(int argc, char * const argv[]) {
 	
 	t.sectors = (void *) calloc(t.num_sectors, sizeof(sector));
 	if (t.sectors == NULL) {
-		fprintf(stderr, "Cannot allocate memory for t.sectors\n"); 
-		exit(1);
+		ERR ("Cannot allocate memory for t.sectors"); 
+		exit (EXIT_FAILURE);
 	}
 	if ((pk = (void *) malloc(sizeof(pKeys))) == NULL) {
-		fprintf(stderr, "Cannot allocate memory for pk\n"); 
-		exit(1);
+		ERR ("Cannot allocate memory for pk"); 
+		exit (EXIT_FAILURE);
 	}
 	if ((bk = (void *) malloc(sizeof(bKeys))) == NULL) {
-		fprintf(stderr, "Cannot allocate memory for bk\n"); 
-		exit(1);
+		ERR ("Cannot allocate memory for bk"); 
+		exit (EXIT_FAILURE);
 	} else { 
 		bk->brokenKeys = NULL;
 		bk->size = 0; 
@@ -186,15 +186,15 @@ int main(int argc, char * const argv[]) {
 		
 	d.distances = (void *) calloc(d.num_distances, sizeof(u_int32_t));
 	if (d.distances == NULL) {
-		fprintf(stderr, "Cannot allocate memory for t.distances\n"); 
-		exit(1);
+		ERR ("Cannot allocate memory for t.distances"); 
+		exit (EXIT_FAILURE);
 	}		
 	
 	// Test if a compatible MIFARE tag is used
 	if ((t.nt.nti.nai.btSak & 0x08) == 0) {
-		printf("Error: inserted tag is not a MIFARE Classic card\n");
+		ERR ("inserted tag is not a MIFARE Classic");
 		nfc_disconnect(r.pdi);
-		exit(1);
+		exit (EXIT_FAILURE);
 	}
 	
 	// Initialize t.sectors, keys are not known yet
@@ -371,8 +371,8 @@ int main(int argc, char * const argv[]) {
 				}
 				// We haven't found any key, exiting
 				if ((dumpKeysA && !t.sectors[j].foundKeyA) || (!dumpKeysA && !t.sectors[j].foundKeyB)) { 
-					fprintf(stderr, "No success, maybe you should increase the probes\n");
-					exit(1);
+					ERR ("No success, maybe you should increase the probes");
+					exit (EXIT_FAILURE);
 				}
 			}
 		}
@@ -399,7 +399,7 @@ int main(int argc, char * const argv[]) {
 			// Try A key, auth() + read()
 			memcpy(mp.mpa.abtKey, t.sectors[i].KeyA, sizeof(t.sectors[i].KeyA));
 			if (!nfc_initiator_mifare_cmd(r.pdi, MC_AUTH_A, block, &mp)) {
-				// fprintf(stderr, "Error: Auth A\n");
+				// ERR ("Error: Auth A");
 				mf_configure(r.pdi);
 				mf_anticollision(t, r);
 			} else { // and Read
@@ -411,12 +411,12 @@ int main(int argc, char * const argv[]) {
 					failure = false;
 				} else {
 					// Error, now try read() with B key
-					// fprintf(stderr, "Error: Read A\n");
+					// ERR ("Error: Read A");
 					mf_configure(r.pdi);
 					mf_anticollision(t, r);
 					memcpy(mp.mpa.abtKey, t.sectors[i].KeyB, sizeof(t.sectors[i].KeyB));
 					if (!nfc_initiator_mifare_cmd(r.pdi, MC_AUTH_B, block, &mp)) {
-						// fprintf(stderr, "Error: Auth B\n");
+						// ERR ("Error: Auth B");
 						mf_configure(r.pdi);
 						mf_anticollision(t, r);
 					} else { // and Read	
@@ -429,7 +429,7 @@ int main(int argc, char * const argv[]) {
 						} else {
 							mf_configure(r.pdi);
 							mf_anticollision(t, r);
-							// fprintf(stderr, "Error: Read B\n");
+							// ERR ("Error: Read B");
 						}
 					}
 				}
@@ -447,7 +447,7 @@ int main(int argc, char * const argv[]) {
 		if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
 			fprintf(stdout, "Error, cannot write dump\n");
 			fclose(pfDump);
-			exit(1);
+			exit (EXIT_FAILURE);
 		}
 		fclose(pfDump);
 	}
@@ -488,8 +488,8 @@ void mf_init(mftag *t, mfreader *r) {
 	// Connect to the first NFC device
 	r->pdi = nfc_connect(NULL);
 	if (!r->pdi) {
-		fprintf(stderr, "!Error connecting to the NFC reader\n");
-		exit(1);
+		ERR ("Unable to connection to NFC device\n");
+		exit (EXIT_FAILURE);
 	}
 }
 
@@ -513,9 +513,9 @@ void mf_select_tag(nfc_device_t* pdi, nfc_target_t* pnt) {
 		.nbr = NBR_106,
 	};
 	if (!nfc_initiator_select_passive_target(pdi, nm, NULL, 0, pnt)) {
-		fprintf(stderr, "!Error connecting to the MIFARE Classic tag\n");
+		ERR ("!Error connecting to the MIFARE Classic tag");
 		nfc_disconnect(pdi);
-		exit(1);
+		exit (EXIT_FAILURE);
 	}
 }
 
@@ -546,8 +546,8 @@ int find_exploit_sector(mftag t) {
 			return i;
 		}
 	}
-	fprintf(stderr, "\n\nNo sector encrypted with the default key has been found, exiting..\n");
-	exit(1);
+	ERR ("\n\nNo sector encrypted with the default key has been found, exiting..");
+	exit (EXIT_FAILURE);
 }
 
 void mf_anticollision(mftag t, mfreader r) {
@@ -556,8 +556,8 @@ void mf_anticollision(mftag t, mfreader r) {
 		.nbr = NBR_106,
 	};
 	if (!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt)) {
-		fprintf(stderr, "\n\n!Error: tag has been removed\n");
-		exit(1);
+		ERR ("\n\n!Error: tag has been removed");
+		exit (EXIT_FAILURE);
 	}
 }
 
@@ -654,8 +654,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	// fprintf(stdout, "\t{Ar}:\t");
 	// print_hex_par(ArEnc, 64, ArEncPar);
 	if ((!nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, &RxLen, RxPar)) || (RxLen != 32)) {
-		fprintf(stderr, "Reader-answer transfer error, exiting..\n");
-		exit(1);
+		ERR ("Reader-answer transfer error, exiting..");
+		exit (EXIT_FAILURE);
 	}
 	
 	// Now print the answer from the tag
@@ -665,8 +665,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	// Decrypt the tag answer and verify that suc3(Nt) is At
 	Nt = prng_successor(Nt, 32);
 	if (!((crypto1_word(pcs, 0x00, 0) ^ bytes_to_num(Rx, 4)) == (Nt&0xFFFFFFFF))) {
-		fprintf(stderr, "[At] is not Suc3(Nt), something is wrong, exiting..\n");
-		exit(1);
+		ERR ("[At] is not Suc3(Nt), something is wrong, exiting..");
+		exit (EXIT_FAILURE);
 	}
 	// fprintf(stdout, "Authentication completed.\n\n");
 	
@@ -684,7 +684,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			// Sending the encrypted Auth command
 			if (!nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, &RxLen, RxPar)) {
 				fprintf(stdout, "Error requesting encrypted tag-nonce\n");
-				exit(1);
+				exit (EXIT_FAILURE);
 			}
 
 			// Decrypt the encrypted auth 
@@ -712,13 +712,13 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			}
 			nfc_configure(r.pdi,NDO_HANDLE_PARITY,false);
 			if ((!nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, &RxLen, RxPar)) || (RxLen != 32)) {
-				fprintf(stderr, "Reader-answer transfer error, exiting..\n");
-				exit(1);
+				ERR ("Reader-answer transfer error, exiting..");
+				exit (EXIT_FAILURE);
 			}
 			Nt = prng_successor(Nt, 32);
 			if (!((crypto1_word(pcs, 0x00, 0) ^ bytes_to_num(Rx, 4)) == (Nt&0xFFFFFFFF))) {
-				fprintf(stderr, "[At] is not Suc3(Nt), something is wrong, exiting..\n");
-				exit(1);
+				ERR ("[At] is not Suc3(Nt), something is wrong, exiting..");
+				exit (EXIT_FAILURE);
 			}
 		} // Next auth probe
 		
@@ -742,7 +742,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 		}
 		if (!nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, &RxLen, RxPar)) {
 			fprintf(stdout, "Error requesting encrypted tag-nonce\n");
-			exit(1);
+			exit (EXIT_FAILURE);
 		}
 		
 		// Save the encrypted nonce
@@ -778,8 +778,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 						// fprintf(stdout, "New chunk by %d, sizeof %lu\n", kcount, pk->size * sizeof(uint64_t));
 						pk->possibleKeys = (uint64_t *) realloc((void *)pk->possibleKeys, pk->size * sizeof(uint64_t));
 						if (pk->possibleKeys == NULL) {
-							fprintf(stderr, "Memory allocation error for pk->possibleKeys\n"); 
-							exit(1);
+							ERR ("Memory allocation error for pk->possibleKeys"); 
+							exit (EXIT_FAILURE);
 						}
 					}
 					pk->possibleKeys[kcount] = lfsr;
@@ -794,8 +794,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 		if (kcount != 0) {
 			pk->size = --kcount;
 			if ((pk->possibleKeys = (uint64_t *) realloc((void *)pk->possibleKeys, pk->size * sizeof(uint64_t))) == NULL) {
-				fprintf(stderr, "Memory allocation error for pk->possibleKeys\n"); 
-				exit(1);
+				ERR ("Memory allocation error for pk->possibleKeys"); 
+				exit (EXIT_FAILURE);
 			}		
 		}
 	}
@@ -835,8 +835,8 @@ countKeys * uniqsort(uint64_t * possibleKeys, uint32_t size) {
 	
 	our_counts = calloc(size, sizeof(countKeys));
 	if (our_counts == NULL) {
-		fprintf(stderr, "Memory allocation error for our_counts\n");
-		exit(1);
+		ERR ("Memory allocation error for our_counts");
+		exit (EXIT_FAILURE);
 	}
 	
 	for (i = 0; i < size; i++) {
