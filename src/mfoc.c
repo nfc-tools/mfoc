@@ -157,9 +157,41 @@ int main(int argc, char * const argv[]) {
 	
 	// Initialize reader/tag structures
 	mf_init(&t, &r);
-	// Configure reader settings
-	mf_configure(r.pdi);
-	mf_select_tag(r.pdi, &(t.nt));
+
+    if (!nfc_initiator_init (r.pdi)) {
+      nfc_perror (pnd, "nfc_initiator_init");
+      exit (EXIT_FAILURE);
+    }
+	// Drop the field for a while, so can be reset
+	if (!nfc_configure(r.pdi, NDO_ACTIVATE_FIELD, true) {
+      nfc_perror (pnd, "nfc_configure activate field");
+      exit (EXIT_FAILURE);
+    }
+	// Let the reader only try once to find a tag
+	if (!nfc_configure(r.pdi, NDO_INFINITE_SELECT, false) {
+      nfc_perror (pnd, "nfc_configure infinite select");
+      exit (EXIT_FAILURE);
+    }
+	// Configure the CRC and Parity settings
+	if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, true) {
+      nfc_perror (pnd, "nfc_configure crc");
+      exit (EXIT_FAILURE);
+    }
+	if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, true) {
+      nfc_perror (pnd, "nfc_configure parity");
+      exit (EXIT_FAILURE);
+    }
+
+/*
+	// wait for tag to appear
+	for (i=0;!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) && i < 10; i++) zsleep (100);
+*/
+
+	// mf_select_tag(r.pdi, &(t.nt));
+    if (!nfc_initiator_select_passive_target (r.pdi, nm, NULL, 0, &t.nt)) {
+      nfc_perror (pnd, "nfc_initiator_select_passive_target");
+      exit (EXIT_FAILURE);
+    }
 	
 	// Save tag uid and info about block size (b4K)
 	t.b4K = (t.nt.nti.nai.abtAtqa[1] == 0x02);
