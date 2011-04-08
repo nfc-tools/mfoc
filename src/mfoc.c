@@ -596,14 +596,14 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	
 	// We need full control over the CRC
 	if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, false))  {
-		nfc_perror (r.pdi, "nfc_configure");
+		nfc_perror (r.pdi, "nfc_configure crc");
 		exit (EXIT_FAILURE);
 	}
 
 	// Request plain tag-nonce
 	// fprintf(stdout, "\t[Nt]:\t");
 	if (!nfc_configure (r.pdi, NDO_EASY_FRAMING, false)) {
-		nfc_perror (r.pdi, "nfc_configure");
+		nfc_perror (r.pdi, "nfc_configure framing");
 		exit (EXIT_FAILURE);
 	}
 
@@ -649,8 +649,11 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	}
 	
 	// Finally we want to send arbitrary parity bits
-	nfc_configure(r.pdi, NDO_HANDLE_PARITY, false);
-	
+	if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, false)) {
+		nfc_perror (r.pdi, "nfc_configure parity");
+		exit (EXIT_FAILURE);
+	}
+
 	// Transmit reader-answer
 	// fprintf(stdout, "\t{Ar}:\t");
 	// print_hex_par(ArEnc, 64, ArEncPar);
