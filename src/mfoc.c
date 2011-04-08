@@ -30,6 +30,8 @@
  URL http://www.cs.ru.nl/~petervr/papers/grvw_2009_pickpocket.pdf
 */
 
+/* vim: set ts=2 sw=2 et: */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -48,6 +50,11 @@
 #include "mfoc.h"
 
 int main(int argc, char * const argv[]) {
+	const nfc_modulation_t nm = {
+		.nmt = NMT_ISO14443A,
+		.nbr = NBR_106,
+	};
+
 	int ch, i, k, n, j, m, o;
 	int key, block;
 	int succeed = 1;
@@ -158,29 +165,29 @@ int main(int argc, char * const argv[]) {
 	// Initialize reader/tag structures
 	mf_init(&t, &r);
 
-    if (!nfc_initiator_init (r.pdi)) {
-      nfc_perror (pnd, "nfc_initiator_init");
-      exit (EXIT_FAILURE);
-    }
+	if (!nfc_initiator_init (r.pdi)) {
+		nfc_perror (r.pdi, "nfc_initiator_init");
+		exit (EXIT_FAILURE);
+	}
 	// Drop the field for a while, so can be reset
-	if (!nfc_configure(r.pdi, NDO_ACTIVATE_FIELD, true) {
-      nfc_perror (pnd, "nfc_configure activate field");
-      exit (EXIT_FAILURE);
-    }
+	if (!nfc_configure(r.pdi, NDO_ACTIVATE_FIELD, true)) {
+		nfc_perror (r.pdi, "nfc_configure activate field");
+		exit (EXIT_FAILURE);
+	}
 	// Let the reader only try once to find a tag
-	if (!nfc_configure(r.pdi, NDO_INFINITE_SELECT, false) {
-      nfc_perror (pnd, "nfc_configure infinite select");
-      exit (EXIT_FAILURE);
-    }
+	if (!nfc_configure(r.pdi, NDO_INFINITE_SELECT, false)) {
+		nfc_perror (r.pdi, "nfc_configure infinite select");
+		exit (EXIT_FAILURE);
+	}
 	// Configure the CRC and Parity settings
-	if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, true) {
-      nfc_perror (pnd, "nfc_configure crc");
-      exit (EXIT_FAILURE);
-    }
-	if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, true) {
-      nfc_perror (pnd, "nfc_configure parity");
-      exit (EXIT_FAILURE);
-    }
+	if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, true)) {
+		nfc_perror (r.pdi, "nfc_configure crc");
+		exit (EXIT_FAILURE);
+	}
+	if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, true)) {
+		nfc_perror (r.pdi, "nfc_configure parity");
+		exit (EXIT_FAILURE);
+	}
 
 /*
 	// wait for tag to appear
@@ -188,10 +195,10 @@ int main(int argc, char * const argv[]) {
 */
 
 	// mf_select_tag(r.pdi, &(t.nt));
-    if (!nfc_initiator_select_passive_target (r.pdi, nm, NULL, 0, &t.nt)) {
-      nfc_perror (pnd, "nfc_initiator_select_passive_target");
-      exit (EXIT_FAILURE);
-    }
+	if (!nfc_initiator_select_passive_target (r.pdi, nm, NULL, 0, &t.nt)) {
+		nfc_perror (r.pdi, "nfc_initiator_select_passive_target");
+		exit (EXIT_FAILURE);
+	}
 	
 	// Save tag uid and info about block size (b4K)
 	t.b4K = (t.nt.nti.nai.abtAtqa[1] == 0x02);
