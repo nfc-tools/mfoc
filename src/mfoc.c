@@ -167,26 +167,26 @@ int main(int argc, char * const argv[]) {
 
 	if (!nfc_initiator_init (r.pdi)) {
 		nfc_perror (r.pdi, "nfc_initiator_init");
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 	// Drop the field for a while, so can be reset
 	if (!nfc_configure(r.pdi, NDO_ACTIVATE_FIELD, true)) {
 		nfc_perror (r.pdi, "nfc_configure activate field");
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 	// Let the reader only try once to find a tag
 	if (!nfc_configure(r.pdi, NDO_INFINITE_SELECT, false)) {
 		nfc_perror (r.pdi, "nfc_configure infinite select");
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 	// Configure the CRC and Parity settings
 	if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, true)) {
 		nfc_perror (r.pdi, "nfc_configure crc");
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 	if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, true)) {
 		nfc_perror (r.pdi, "nfc_configure parity");
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 
 /*
@@ -197,7 +197,7 @@ int main(int argc, char * const argv[]) {
 	// mf_select_tag(r.pdi, &(t.nt));
 	if (!nfc_initiator_select_passive_target (r.pdi, nm, NULL, 0, &t.nt)) {
 		nfc_perror (r.pdi, "nfc_initiator_select_passive_target");
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 	
 	// Save tag uid and info about block size (b4K)
@@ -210,15 +210,15 @@ int main(int argc, char * const argv[]) {
 	t.sectors = (void *) calloc(t.num_sectors, sizeof(sector));
 	if (t.sectors == NULL) {
 		ERR ("Cannot allocate memory for t.sectors"); 
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 	if ((pk = (void *) malloc(sizeof(pKeys))) == NULL) {
 		ERR ("Cannot allocate memory for pk"); 
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 	if ((bk = (void *) malloc(sizeof(bKeys))) == NULL) {
 		ERR ("Cannot allocate memory for bk"); 
-		exit (EXIT_FAILURE);
+		goto error;
 	} else { 
 		bk->brokenKeys = NULL;
 		bk->size = 0; 
@@ -227,14 +227,13 @@ int main(int argc, char * const argv[]) {
 	d.distances = (void *) calloc(d.num_distances, sizeof(u_int32_t));
 	if (d.distances == NULL) {
 		ERR ("Cannot allocate memory for t.distances"); 
-		exit (EXIT_FAILURE);
+		goto error;
 	}		
 	
 	// Test if a compatible MIFARE tag is used
 	if ((t.nt.nti.nai.btSak & 0x08) == 0) {
 		ERR ("inserted tag is not a MIFARE Classic");
-		nfc_disconnect(r.pdi);
-		exit (EXIT_FAILURE);
+		goto error;
 	}
 	
 	// Initialize t.sectors, keys are not known yet
@@ -501,7 +500,10 @@ int main(int argc, char * const argv[]) {
 
 	// Disconnect device and exit
 	nfc_disconnect(r.pdi);
-    return 0;
+    exit (EXIT_SUCCESS);
+error:
+    nfc_disconnect(r.pdi);
+    exit (EXIT_FAILURE);
 }
 
 void usage(FILE * stream, int errno) {
