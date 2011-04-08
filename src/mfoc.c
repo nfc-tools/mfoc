@@ -787,6 +787,17 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			ERR ("while requesting encrypted tag-nonce");
 			exit (EXIT_FAILURE);
 		}
+
+		// Finally we want to send arbitrary parity bits
+		if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, true))  {
+			nfc_perror (r.pdi, "nfc_configure parity restore M");
+			exit (EXIT_FAILURE);
+		}
+
+		if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, true))  {
+			nfc_perror (r.pdi, "nfc_configure crc restore M");
+			exit (EXIT_FAILURE);
+		}
 		
 		// Save the encrypted nonce
 		NtEnc = bytes_to_num(Rx, 4);
