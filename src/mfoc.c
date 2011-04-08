@@ -534,16 +534,34 @@ void mf_init(mftag *t, mfreader *r) {
 }
 
 void mf_configure(nfc_device_t* pdi) {
-	nfc_initiator_init(pdi);
+	if (!nfc_initiator_init (pdi)) {
+		nfc_perror (pdi, "nfc_initiator_init");
+		exit (EXIT_FAILURE);
+	}
 	// Drop the field for a while, so can be reset
-	nfc_configure(pdi,NDO_ACTIVATE_FIELD,false);
+	if (!nfc_configure(pdi, NDO_ACTIVATE_FIELD, false)) {
+		nfc_perror (pdi, "nfc_configure activate field");
+		exit (EXIT_FAILURE);
+	}
 	// Let the reader only try once to find a tag
-	nfc_configure(pdi,NDO_INFINITE_SELECT,false);
+	if (!nfc_configure(pdi, NDO_INFINITE_SELECT, false)) {
+		nfc_perror (pdi, "nfc_configure infinite select");
+		exit (EXIT_FAILURE);
+	}
 	// Configure the CRC and Parity settings
-	nfc_configure(pdi,NDO_HANDLE_CRC,true);
-	nfc_configure(pdi,NDO_HANDLE_PARITY,true);
+	if (!nfc_configure(pdi, NDO_HANDLE_CRC, true)) {
+		nfc_perror (pdi, "nfc_configure crc");
+		exit (EXIT_FAILURE);
+	}
+	if (!nfc_configure(pdi, NDO_HANDLE_PARITY, true)) {
+		nfc_perror (pdi, "nfc_configure parity");
+		exit (EXIT_FAILURE);
+	}
 	// Enable the field so more power consuming cards can power themselves up
-	nfc_configure(pdi,NDO_ACTIVATE_FIELD,true);
+	if (!nfc_configure(pdi, NDO_ACTIVATE_FIELD, true)) {
+		nfc_perror (pdi, "nfc_configure activate field");
+		exit (EXIT_FAILURE);
+	}
 }
 
 void mf_select_tag(nfc_device_t* pdi, nfc_target_t* pnt) {
@@ -596,7 +614,8 @@ void mf_anticollision(mftag t, mfreader r) {
 		.nbr = NBR_106,
 	};
 	if (!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt)) {
-		ERR ("\n\n!Error: tag has been removed");
+		nfc_perror (r.pdi, "nfc_initiator_select_passive_target");
+		ERR ("Tag has been removed");
 		exit (EXIT_FAILURE);
 	}
 }
