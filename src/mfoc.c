@@ -200,7 +200,17 @@ int main(int argc, char * const argv[]) {
 		goto error;
 	}
 	
-	// Save tag uid and info about block size (b4K)
+	// Test if a compatible MIFARE tag is used
+	if ((t.nt.nti.nai.btSak & 0x08) == 0) {
+		ERR ("only Mifare Classic is supported");
+		goto error;
+	}
+
+	// TODO: Support Mifare Classic with 7 bytes UID ?
+	if (t.nt.nti.nai.szUidLen != 4) {
+		ERR ("only Mifare Classic with UID on 4 bytes are supported");
+	}
+	// Save tag's block size (b4K)
 	t.b4K = (t.nt.nti.nai.abtAtqa[1] == 0x02);
 	t.uid = (uint32_t) bytes_to_num(t.nt.nti.nai.abtUid, 4);
 
@@ -230,18 +240,12 @@ int main(int argc, char * const argv[]) {
 		goto error;
 	}		
 	
-	// Test if a compatible MIFARE tag is used
-	if ((t.nt.nti.nai.btSak & 0x08) == 0) {
-		ERR ("inserted tag is not a MIFARE Classic");
-		goto error;
-	}
-	
 	// Initialize t.sectors, keys are not known yet
 	for (i = 0; i < (t.num_sectors); ++i) {
 		t.sectors[i].foundKeyA = t.sectors[i].foundKeyB = false;
 	}
 	
-	fprintf(stdout, "Found MIFARE Classic %cK card with uid: %08x\n", (t.b4K ? '4' : '1'), t.uid);
+	print_nfc_iso14443a_info (t.nt.nti.nai, true);
 	
 	// Try to authenticate to all sectors with default keys
 	// Set the authentication information (uid)
@@ -661,7 +665,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	}
 
 	// Request plain tag-nonce
-	// fprintf(stdout, "\t[Nt]:\t");
+	// TODO: Set NDO_EASY_FRAMING option only once if possible
 	if (!nfc_configure (r.pdi, NDO_EASY_FRAMING, false)) {
 		nfc_perror (r.pdi, "nfc_configure framing");
 		exit (EXIT_FAILURE);
