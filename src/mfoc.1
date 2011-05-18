@@ -1,0 +1,41 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.TH MFOC 1 "May 13, 2011"
+.SH NAME
+mfoc \- MIFARE Classic offline cracker
+.SH SYNOPSIS
+.B mfoc
+[ \fB\-h\fP ]
+[ \fB\-k\fP \fIKEY\fR ]...
+[ \fB\-O\fP \fIFILE\fR ]
+[ \fB\-P\fP \fINUM\fR ]
+[ \fB\-T\fP \fINUM\fR ]
+.SH DESCRIPTION
+This manual page documents briefly the
+.B mfoc
+command.
+.PP
+\fBmfoc\fP is a program that cracks the encryption of a MIFARE Classic chip and dumps the chip's keys and decrypted memory contents to a file.
+To run it you need to have access to an NFC reader and, of course, a card equipped with a MIFARE Classic chip.
+.SH OPTIONS
+A summary of options is included below.
+.TP
+\fB\-h\fP
+Show summary of options.
+.TP
+\fB\-k\fP \fIKEY\fR
+Initially try KEY in addition to the default keys.
+.TP
+\fB\-O\fP \fIFILE\fR
+Dump card contents to FILE.
+.TP
+\fB\-P\fP \fINUM\fR
+Probe each sector up to NUM times.  Default is 20.
+.TP
+\fB\-T\fP \fINUM\fR
+Set half the range for a possible distance tolerance to NUM.  Default is 20 (for a total range of 40).
+.SH AUTHOR
+.B mfoc
+was written by Norbert Szetei and Pavol Luptak with contributions by others.
+.PP
+This manual page was written by Thomas Hood <jdthood@gmail.com>.
+MIFARE is a trade mark of NXP bv, Netherlands.
