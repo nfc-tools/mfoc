@@ -70,11 +70,11 @@ int main(int argc, char * const argv[]) {
 	bool skip = false;
 	
 	// Next default key specified as option (-k)
-	byte_t * defKey = NULL; 
+	byte_t * defKeys = NULL, *p;
+	size_t defKeys_len = 0;
 	
 	// Array with default Mifare Classic keys
 	byte_t defaultKeys[][6] = {
-		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // User defined key slot
 		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // Default key (first key used by program if no user defined key)
 		{0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
 		{0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
@@ -128,16 +128,17 @@ int main(int argc, char * const argv[]) {
 				// fprintf(stdout, "Tolerance number: %d\n", probes);
 				break;
 			case 'k':
-				// Add this key to the default keys list
-				if ((defKey = calloc(6, sizeof(byte_t))) == NULL) {
-					ERR ("Cannot allocate memory for defKey");
+				// Add this key to the default keys
+				p = realloc(defKeys, defKeys_len + 6);
+				if (!p) {
+					ERR ("Cannot allocate memory for defKeys");
 					exit (EXIT_FAILURE);
-				} else {
-					bzero(defKey, 6);
-					num_to_bytes(strtoll(optarg, NULL, 16), 6, defKey);
-					memcpy(defaultKeys[0], defKey, 6);
 				}
-				fprintf(stdout, "The custom key 0x%012llx has been added to the default keys\n", bytes_to_num(defKey, 6));
+				defKeys = p;
+				memset(defKeys+defKeys_len, 0, 6);
+				num_to_bytes(strtoll(optarg, NULL, 16), 6, defKeys+defKeys_len);
+				fprintf(stdout, "The custom key 0x%012llx has been added to the default keys\n", bytes_to_num(defKeys+defKeys_len, 6));
+				defKeys_len = defKeys_len + 6;
 				
 				break;				
 			case 'O':
@@ -252,9 +253,16 @@ int main(int argc, char * const argv[]) {
 	memcpy(mp.mpa.abtUid, t.nt.nti.nai.abtUid, sizeof(mp.mpa.abtUid));
 	// Iterate over all keys (n = number of keys)
 	n = sizeof(defaultKeys)/sizeof(defaultKeys[0]);
-	for (key = 0; key < n; key++) {
-		if (key == 0 && defKey == NULL) ++key; // Custom key not provided, try another key
-		memcpy(mp.mpa.abtKey, defaultKeys[key], sizeof(mp.mpa.abtKey));
+	size_t defKey_bytes_todo = defKeys_len;
+	key = 0;
+	while (key < n) {
+		if (defKey_bytes_todo > 0) {
+			memcpy(mp.mpa.abtKey, defKeys + defKeys_len - defKey_bytes_todo, sizeof(mp.mpa.abtKey));
+			defKey_bytes_todo -= sizeof(mp.mpa.abtKey);
+		} else {
+			memcpy(mp.mpa.abtKey, defaultKeys[key], sizeof(mp.mpa.abtKey));
+			key++;
+		}
 		fprintf(stdout, "[Key: %012llx] -> ", bytes_to_num(mp.mpa.abtKey, 6));
 		fprintf(stdout, "[");
 		i = 0; // Sector counter
@@ -534,7 +542,7 @@ void mf_init(mftag *t, mfreader *r) {
 	// Connect to the first NFC device
 	r->pdi = nfc_connect(NULL);
 	if (!r->pdi) {
-		ERR ("Unable to connect to NFC device\n");
+		printf ("No NFC device found.\n");
 		exit (EXIT_FAILURE);
 	}
 }
