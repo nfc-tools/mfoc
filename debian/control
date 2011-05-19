@@ -1,0 +1,17 @@
+Source: mfoc
+Section: utils
+Priority: extra
+Maintainer: Thomas Hood <jdthood@gmail.com>
+Build-Depends: debhelper (>= 7.0.15), libnfc-dev (>= 1.5.0), pkg-config
+Standards-Version: 3.9.2
+Homepage: http://code.google.com/p/nfc-tools/
+Vcs-Svn: http://nfc-tools.googlecode.com/svn/trunk/mfoc
+Vcs-Browser: http://nfc-tools.googlecode.com/svn/trunk/mfoc
+
+Package: mfoc
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc2 (>= 1.5.0)
+Description: MIFARE Classic offline cracker
+ This package includes the mfoc program which cracks the
+ encryption keys of the MIFARE Classic chip and dumps the
+ chip's memory contents to a file.
