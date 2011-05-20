@@ -519,22 +519,24 @@ error:
 }
 
 void usage(FILE * stream, int errno) {
-	fprintf(stream, "mfoc %s\n\n", PACKAGE_VERSION);
-	fprintf(stream, "usage: mfoc [-h] [-P probnum] [-T tolerance] [-k custom_key] [-O output]\n\n");
-	fprintf(stream, "example: mfoc -O card_dump\n");
-	fprintf(stream, "example: mfoc -k ffffeeeedddd -O card_dump\n");
-	fprintf(stream, "example: mfoc -P 50 -O card_dump\n");
-	fprintf(stream, "\n");					
-	fprintf(stream, "  h : print this help\n");
-//	fprintf(stream, "  B : instead of 'A' dump 'B' keys\n");
-	fprintf(stream, "  k : use a specified key instead of looking for defaults ones\n");
-//	fprintf(stream, "  D : number of distance probes, default is 20\n");
-//	fprintf(stream, "  S : number of sets with keystreams, default is 5\n");
-	fprintf(stream, "  P : number of probes for a key recovery for one sector, default is 20\n");
-	fprintf(stream, "  T : range for a possible distance tolerance, default is 20 (40 in both direction)\n");
-//	fprintf(stream, "  s : specify the list of sectors to crack, for example -s 0,1,3,5\n");
-	fprintf(stream, "  O : dump file where the revealed keys should be stored\n");
+	fprintf(stream, "Usage: mfoc [-h] [-k key]... [-P probnum] [-T tolerance] [-O output]\n");
 	fprintf(stream, "\n");
+	fprintf(stream, "  h     print this help and exit\n");
+//	fprintf(stream, "  B     instead of 'A' dump 'B' keys\n");
+	fprintf(stream, "  k     try the specified key in addition to the default keys\n");
+//	fprintf(stream, "  D     number of distance probes, default is 20\n");
+//	fprintf(stream, "  S     number of sets with keystreams, default is 5\n");
+	fprintf(stream, "  P     number of probes per sector, instead of default of 20\n");
+	fprintf(stream, "  T     nonce tolerance half-range, instead of default of 20\n        (i.e., 40 for the total range, in both directions)\n");
+//	fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
+	fprintf(stream, "  O     file in which the card contents will be written (REQUIRED)\n");
+	fprintf(stream, "\n");
+	fprintf(stream, "Example: mfoc -O mycard.mfd\n");
+	fprintf(stream, "Example: mfoc -k ffffeeeedddd -O mycard.mfd\n");
+	fprintf(stream, "Example: mfoc -P 50 -T 30 -O mycard.mfd\n");
+	fprintf(stream, "\n");
+	fprintf(stream, "This is mfoc version %s.\n", PACKAGE_VERSION);
+	fprintf(stream, "For more information, run: 'man mfoc'.\n");
 	exit(errno);
 }
 
