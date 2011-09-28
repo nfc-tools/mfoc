@@ -681,7 +681,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 		exit (EXIT_FAILURE);
 	}
 
-	if (!nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, &RxLen)) {
+	if (!nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, &RxLen, NULL)) {
 		fprintf(stdout, "Error while requesting plain tag-nonce\n");
 		exit(EXIT_FAILURE);
 	}
