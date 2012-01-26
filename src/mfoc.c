@@ -50,7 +50,7 @@
 #include "mfoc.h"
 
 int main(int argc, char * const argv[]) {
-	const nfc_modulation_t nm = {
+	const nfc_modulation nm = {
 		.nmt = NMT_ISO14443A,
 		.nbr = NBR_106,
 	};
@@ -70,11 +70,11 @@ int main(int argc, char * const argv[]) {
 	bool skip = false;
 	
 	// Next default key specified as option (-k)
-	byte_t * defKeys = NULL, *p;
+	uint8_t * defKeys = NULL, *p;
 	size_t defKeys_len = 0;
 	
 	// Array with default Mifare Classic keys
-	byte_t defaultKeys[][6] = {
+	uint8_t defaultKeys[][6] = {
 		{0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // Default key (first key used by program if no user defined key)
 		{0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
 		{0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
@@ -166,27 +166,27 @@ int main(int argc, char * const argv[]) {
 	// Initialize reader/tag structures
 	mf_init(&t, &r);
 
-	if (!nfc_initiator_init (r.pdi)) {
+	if (nfc_initiator_init (r.pdi) < 0) {
 		nfc_perror (r.pdi, "nfc_initiator_init");
 		goto error;
 	}
 	// Drop the field for a while, so can be reset
-	if (!nfc_configure(r.pdi, NDO_ACTIVATE_FIELD, true)) {
-		nfc_perror (r.pdi, "nfc_configure activate field");
+	if (nfc_device_set_property_bool(r.pdi, NP_ACTIVATE_FIELD, true) < 0) {
+		nfc_perror (r.pdi, "nfc_device_set_property_bool activate field");
 		goto error;
 	}
 	// Let the reader only try once to find a tag
-	if (!nfc_configure(r.pdi, NDO_INFINITE_SELECT, false)) {
-		nfc_perror (r.pdi, "nfc_configure infinite select");
+	if (nfc_device_set_property_bool(r.pdi, NP_INFINITE_SELECT, false) < 0) {
+		nfc_perror (r.pdi, "nfc_device_set_property_bool infinite select");
 		goto error;
 	}
 	// Configure the CRC and Parity settings
-	if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, true)) {
-		nfc_perror (r.pdi, "nfc_configure crc");
+	if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_CRC, true) < 0) {
+		nfc_perror (r.pdi, "nfc_device_set_property_bool crc");
 		goto error;
 	}
-	if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, true)) {
-		nfc_perror (r.pdi, "nfc_configure parity");
+	if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_PARITY, true) < 0) {
+		nfc_perror (r.pdi, "nfc_device_set_property_bool parity");
 		goto error;
 	}
 
@@ -196,7 +196,7 @@ int main(int argc, char * const argv[]) {
 */
 
 	// mf_select_tag(r.pdi, &(t.nt));
-	if (!nfc_initiator_select_passive_target (r.pdi, nm, NULL, 0, &t.nt)) {
+	if (nfc_initiator_select_passive_target (r.pdi, nm, NULL, 0, &t.nt) < 0) {
 		nfc_perror (r.pdi, "nfc_initiator_select_passive_target");
 		goto error;
 	}
@@ -507,14 +507,16 @@ int main(int argc, char * const argv[]) {
 	free(d.distances);
 	
 	// Reset the "advanced" configuration to normal
-	nfc_configure(r.pdi, NDO_HANDLE_CRC, true);
-	nfc_configure(r.pdi, NDO_HANDLE_PARITY, true);
+	nfc_device_set_property_bool(r.pdi, NP_HANDLE_CRC, true);
+	nfc_device_set_property_bool(r.pdi, NP_HANDLE_PARITY, true);
 
 	// Disconnect device and exit
-	nfc_disconnect(r.pdi);
+	nfc_close(r.pdi);
+    nfc_exit(NULL);
     exit (EXIT_SUCCESS);
 error:
-    nfc_disconnect(r.pdi);
+    nfc_close(r.pdi);
+    nfc_exit(NULL);
     exit (EXIT_FAILURE);
 }
 
@@ -542,53 +544,55 @@ void usage(FILE * stream, int errno) {
 
 void mf_init(mftag *t, mfreader *r) {
 	// Connect to the first NFC device
-	r->pdi = nfc_connect(NULL);
+	nfc_init(NULL);
+	r->pdi = nfc_open(NULL, NULL);
 	if (!r->pdi) {
 		printf ("No NFC device found.\n");
 		exit (EXIT_FAILURE);
 	}
 }
 
-void mf_configure(nfc_device_t* pdi) {
-	if (!nfc_initiator_init (pdi)) {
+void mf_configure(nfc_device* pdi) {
+	if (nfc_initiator_init (pdi) < 0) {
 		nfc_perror (pdi, "nfc_initiator_init");
 		exit (EXIT_FAILURE);
 	}
 	// Drop the field for a while, so can be reset
-	if (!nfc_configure(pdi, NDO_ACTIVATE_FIELD, false)) {
-		nfc_perror (pdi, "nfc_configure activate field");
+	if (nfc_device_set_property_bool(pdi, NP_ACTIVATE_FIELD, false) < 0) {
+		nfc_perror (pdi, "nfc_device_set_property_bool activate field");
 		exit (EXIT_FAILURE);
 	}
 	// Let the reader only try once to find a tag
-	if (!nfc_configure(pdi, NDO_INFINITE_SELECT, false)) {
-		nfc_perror (pdi, "nfc_configure infinite select");
+	if (nfc_device_set_property_bool(pdi, NP_INFINITE_SELECT, false) < 0) {
+		nfc_perror (pdi, "nfc_device_set_property_bool infinite select");
 		exit (EXIT_FAILURE);
 	}
 	// Configure the CRC and Parity settings
-	if (!nfc_configure(pdi, NDO_HANDLE_CRC, true)) {
-		nfc_perror (pdi, "nfc_configure crc");
+	if (nfc_device_set_property_bool(pdi, NP_HANDLE_CRC, true) < 0) {
+		nfc_perror (pdi, "nfc_device_set_property_bool crc");
 		exit (EXIT_FAILURE);
 	}
-	if (!nfc_configure(pdi, NDO_HANDLE_PARITY, true)) {
-		nfc_perror (pdi, "nfc_configure parity");
+	if (nfc_device_set_property_bool(pdi, NP_HANDLE_PARITY, true) < 0) {
+		nfc_perror (pdi, "nfc_device_set_property_bool parity");
 		exit (EXIT_FAILURE);
 	}
 	// Enable the field so more power consuming cards can power themselves up
-	if (!nfc_configure(pdi, NDO_ACTIVATE_FIELD, true)) {
-		nfc_perror (pdi, "nfc_configure activate field");
+	if (nfc_device_set_property_bool(pdi, NP_ACTIVATE_FIELD, true) < 0) {
+		nfc_perror (pdi, "nfc_device_set_property_bool activate field");
 		exit (EXIT_FAILURE);
 	}
 }
 
-void mf_select_tag(nfc_device_t* pdi, nfc_target_t* pnt) {
+void mf_select_tag(nfc_device* pdi, nfc_target* pnt) {
 	// Poll for a ISO14443A (MIFARE) tag
-	const nfc_modulation_t nm = {
+	const nfc_modulation nm = {
 		.nmt = NMT_ISO14443A,
 		.nbr = NBR_106,
 	};
-	if (!nfc_initiator_select_passive_target(pdi, nm, NULL, 0, pnt)) {
+	if (nfc_initiator_select_passive_target(pdi, nm, NULL, 0, pnt) < 0) {
 		ERR ("Unable to connect to the MIFARE Classic tag");
-		nfc_disconnect(pdi);
+		nfc_close(pdi);
+        nfc_exit(NULL);
 		exit (EXIT_FAILURE);
 	}
 }
@@ -625,11 +629,11 @@ int find_exploit_sector(mftag t) {
 }
 
 void mf_anticollision(mftag t, mfreader r) {
-	const nfc_modulation_t nm = {
+	const nfc_modulation nm = {
 		.nmt = NMT_ISO14443A,
 		.nbr = NBR_106,
 	};
-	if (!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt)) {
+	if (nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) < 0) {
 		nfc_perror (r.pdi, "nfc_initiator_select_passive_target");
 		ERR ("Tag has been removed");
 		exit (EXIT_FAILURE);
@@ -646,16 +650,16 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	// Possible key counter, just continue with a previous "session"
 	uint32_t kcount = pk->size;
 		
-	byte_t Nr[4] = { 0x00,0x00,0x00,0x00 }; // Reader nonce
-	byte_t Auth[4] = { 0x00, t.sectors[e_sector].trailer, 0x00, 0x00 };
-	byte_t AuthEnc[4] = { 0x00, t.sectors[e_sector].trailer, 0x00, 0x00 };
-	byte_t AuthEncPar[8] = { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
+	uint8_t Nr[4] = { 0x00,0x00,0x00,0x00 }; // Reader nonce
+	uint8_t Auth[4] = { 0x00, t.sectors[e_sector].trailer, 0x00, 0x00 };
+	uint8_t AuthEnc[4] = { 0x00, t.sectors[e_sector].trailer, 0x00, 0x00 };
+	uint8_t AuthEncPar[8] = { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
 	
-	byte_t ArEnc[8] = { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
-	byte_t ArEncPar[8] = { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
+	uint8_t ArEnc[8] = { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
+	uint8_t ArEncPar[8] = { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
 	
-	byte_t Rx[MAX_FRAME_LEN]; // Tag response
-	byte_t RxPar[MAX_FRAME_LEN]; // Tag response
+	uint8_t Rx[MAX_FRAME_LEN]; // Tag response
+	uint8_t RxPar[MAX_FRAME_LEN]; // Tag response
 	size_t RxLen;
 	
 	u_int32_t Nt, NtLast, NtProbe, NtEnc, Ks1;
@@ -669,25 +673,25 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	// print_hex(Auth, 4);
 	
 	// We need full control over the CRC
-	if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, false))  {
-		nfc_perror (r.pdi, "nfc_configure crc");
+	if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_CRC, false) < 0)  {
+		nfc_perror (r.pdi, "nfc_device_set_property_bool crc");
 		exit (EXIT_FAILURE);
 	}
 
 	// Request plain tag-nonce
-	// TODO: Set NDO_EASY_FRAMING option only once if possible
-	if (!nfc_configure (r.pdi, NDO_EASY_FRAMING, false)) {
-		nfc_perror (r.pdi, "nfc_configure framing");
+	// TODO: Set NP_EASY_FRAMING option only once if possible
+	if (nfc_device_set_property_bool (r.pdi, NP_EASY_FRAMING, false) < 0) {
+		nfc_perror (r.pdi, "nfc_device_set_property_bool framing");
 		exit (EXIT_FAILURE);
 	}
 
-	if (!nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, &RxLen, NULL)) {
+	if (nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, &RxLen, 0) < 0) {
 		fprintf(stdout, "Error while requesting plain tag-nonce\n");
 		exit(EXIT_FAILURE);
 	}
 
-	if (!nfc_configure (r.pdi, NDO_EASY_FRAMING, true)) {
-		nfc_perror (r.pdi, "nfc_configure");
+	if (nfc_device_set_property_bool (r.pdi, NP_EASY_FRAMING, true) < 0) {
+		nfc_perror (r.pdi, "nfc_device_set_property_bool");
 		exit (EXIT_FAILURE);
 	}
 	// print_hex(Rx, 4);
@@ -723,15 +727,15 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	}
 	
 	// Finally we want to send arbitrary parity bits
-	if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, false)) {
-		nfc_perror (r.pdi, "nfc_configure parity");
+	if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_PARITY, false) < 0) {
+		nfc_perror (r.pdi, "nfc_device_set_property_bool parity");
 		exit (EXIT_FAILURE);
 	}
 
 	// Transmit reader-answer
 	// fprintf(stdout, "\t{Ar}:\t");
 	// print_hex_par(ArEnc, 64, ArEncPar);
-	if ((!nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, &RxLen, RxPar)) || (RxLen != 32)) {
+	if (((RxLen = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, RxPar)) < 0) || (RxLen != 32)) {
 		ERR ("Reader-answer transfer error, exiting..");
 		exit (EXIT_FAILURE);
 	}
@@ -760,7 +764,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			}
 
 			// Sending the encrypted Auth command
-			if (!nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, &RxLen, RxPar)) {
+			if ((RxLen = nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, RxPar)) < 0) {
 				fprintf(stdout, "Error requesting encrypted tag-nonce\n");
 				exit (EXIT_FAILURE);
 			}
@@ -788,8 +792,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 				ArEnc[i] = crypto1_byte(pcs, 0x00, 0) ^ (Nt&0xFF);
 				ArEncPar[i] = filter(pcs->odd) ^ oddparity(Nt);
 			}
-			nfc_configure(r.pdi,NDO_HANDLE_PARITY,false);
-			if ((!nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, &RxLen, RxPar)) || (RxLen != 32)) {
+			nfc_device_set_property_bool(r.pdi,NP_HANDLE_PARITY,false);
+			if (((RxLen = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, RxPar)) < 0) || (RxLen != 32)) {
 				ERR ("Reader-answer transfer error, exiting..");
 				exit (EXIT_FAILURE);
 			}
@@ -818,19 +822,19 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			// Encrypt the parity bits with the 4 plaintext bytes
 			AuthEncPar[i] = filter(pcs->odd) ^ oddparity(Auth[i]);
 		}
-		if (!nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, &RxLen, RxPar)) {
+		if ((RxLen = nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, RxPar)) < 0) {
 			ERR ("while requesting encrypted tag-nonce");
 			exit (EXIT_FAILURE);
 		}
 
 		// Finally we want to send arbitrary parity bits
-		if (!nfc_configure(r.pdi, NDO_HANDLE_PARITY, true))  {
-			nfc_perror (r.pdi, "nfc_configure parity restore M");
+		if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_PARITY, true) < 0)  {
+			nfc_perror (r.pdi, "nfc_device_set_property_bool parity restore M");
 			exit (EXIT_FAILURE);
 		}
 
-		if (!nfc_configure(r.pdi, NDO_HANDLE_CRC, true))  {
-			nfc_perror (r.pdi, "nfc_configure crc restore M");
+		if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_CRC, true) < 0)  {
+			nfc_perror (r.pdi, "nfc_device_set_property_bool crc restore M");
 			exit (EXIT_FAILURE);
 		}
 		
@@ -944,20 +948,20 @@ countKeys * uniqsort(uint64_t * possibleKeys, uint32_t size) {
 
 
 // Return 1 if the nonce is invalid else return 0
-int valid_nonce(uint32_t Nt, uint32_t NtEnc, uint32_t Ks1, byte_t * parity) {
+int valid_nonce(uint32_t Nt, uint32_t NtEnc, uint32_t Ks1, uint8_t * parity) {
 	return ((odd_parity((Nt >> 24) & 0xFF) == ((parity[0]) ^ odd_parity((NtEnc >> 24) & 0xFF) ^ BIT(Ks1,16))) & \
 	(odd_parity((Nt >> 16) & 0xFF) == ((parity[1]) ^ odd_parity((NtEnc >> 16) & 0xFF) ^ BIT(Ks1,8))) & \
 	(odd_parity((Nt >> 8) & 0xFF) == ((parity[2]) ^ odd_parity((NtEnc >> 8) & 0xFF) ^ BIT(Ks1,0)))) ? 1 : 0;
 }
 
-void num_to_bytes(uint64_t n, uint32_t len, byte_t* dest) {
+void num_to_bytes(uint64_t n, uint32_t len, uint8_t* dest) {
 	while (len--) {
-		dest[len] = (byte_t) n;
+		dest[len] = (uint8_t) n;
 		n >>= 8;
 	}
 }
 
-long long unsigned int bytes_to_num(byte_t* src, uint32_t len) {
+long long unsigned int bytes_to_num(uint8_t* src, uint32_t len) {
 	uint64_t num = 0;
 	while (len--)
 	{

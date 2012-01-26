@@ -24,11 +24,11 @@
 #define odd_parity(i) (( (i) ^ (i)>>1 ^ (i)>>2 ^ (i)>>3 ^ (i)>>4 ^ (i)>>5 ^ (i)>>6 ^ (i)>>7 ^ 1) & 0x01)
 
 typedef struct {
-	byte_t KeyA[6];
-	byte_t KeyB[6];
+	uint8_t KeyA[6];
+	uint8_t KeyB[6];
 	bool foundKeyA;
 	bool foundKeyB;
-        byte_t trailer;                         // Value of a trailer block
+        uint8_t trailer;                         // Value of a trailer block
 } sector;
  
 typedef struct {
@@ -36,11 +36,11 @@ typedef struct {
         u_int32_t       median;
         u_int32_t       num_distances;
         u_int32_t       tolerance;
-        byte_t          parity[3];              // used for 3 bits of parity information
+        uint8_t          parity[3];              // used for 3 bits of parity information
 } denonce;                                      // Revealed information about nonce 
  
 typedef struct {
-        nfc_target_t	nt;
+        nfc_target	nt;
         sector *        sectors;                // Allocate later, we do not know the number of sectors yet
 	sector		e_sector;		// Exploit sector
         uint32_t        num_sectors;
@@ -60,7 +60,7 @@ typedef struct {
 } bKeys;
 
 typedef struct {
-        nfc_device_t    *pdi;
+        nfc_device    *pdi;
 } mfreader;
 
 typedef struct {
@@ -71,16 +71,16 @@ typedef struct {
 
 void usage(FILE * stream, int errno);
 void mf_init(mftag *t, mfreader *r);
-void mf_configure(nfc_device_t* pdi);
-void mf_select_tag(nfc_device_t* pdi, nfc_target_t* pnt);
+void mf_configure(nfc_device* pdi);
+void mf_select_tag(nfc_device* pdi, nfc_target* pnt);
 int trailer_block(uint32_t block);
 int find_exploit_sector(mftag t);
 void mf_anticollision(mftag t, mfreader r);
 int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d, pKeys *pk, char mode, bool dumpKeysA);
 uint32_t median(denonce d);
 int compar_int(const void * a, const void * b);
-int valid_nonce(uint32_t Nt, uint32_t NtEnc, uint32_t Ks1, byte_t * parity);
+int valid_nonce(uint32_t Nt, uint32_t NtEnc, uint32_t Ks1, uint8_t * parity);
 int compar_special_int(const void * a, const void * b);
 countKeys * uniqsort(uint64_t *possibleKeys, uint32_t size);
-void num_to_bytes(uint64_t n, uint32_t len, byte_t* dest);
-long long unsigned int bytes_to_num(byte_t* src, uint32_t len);
+void num_to_bytes(uint64_t n, uint32_t len, uint8_t* dest);
+long long unsigned int bytes_to_num(uint8_t* src, uint32_t len);
