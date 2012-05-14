@@ -735,7 +735,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	// Transmit reader-answer
 	// fprintf(stdout, "\t{Ar}:\t");
 	// print_hex_par(ArEnc, 64, ArEncPar);
-	if (((RxLen = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, RxPar)) < 0) || (RxLen != 32)) {
+	int res;
+	if (((res = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, RxPar)) < 0) || (res != 32)) {
 		ERR ("Reader-answer transfer error, exiting..");
 		exit (EXIT_FAILURE);
 	}
@@ -764,7 +765,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			}
 
 			// Sending the encrypted Auth command
-			if ((RxLen = nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, RxPar)) < 0) {
+			if (nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, RxPar) < 0) {
 				fprintf(stdout, "Error requesting encrypted tag-nonce\n");
 				exit (EXIT_FAILURE);
 			}
@@ -793,7 +794,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 				ArEncPar[i] = filter(pcs->odd) ^ oddparity(Nt);
 			}
 			nfc_device_set_property_bool(r.pdi,NP_HANDLE_PARITY,false);
-			if (((RxLen = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, RxPar)) < 0) || (RxLen != 32)) {
+			if (((res = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, RxPar)) < 0) || (res != 32)) {
 				ERR ("Reader-answer transfer error, exiting..");
 				exit (EXIT_FAILURE);
 			}
@@ -822,7 +823,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			// Encrypt the parity bits with the 4 plaintext bytes
 			AuthEncPar[i] = filter(pcs->odd) ^ oddparity(Auth[i]);
 		}
-		if ((RxLen = nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, RxPar)) < 0) {
+		if (nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, RxPar) < 0) {
 			ERR ("while requesting encrypted tag-nonce");
 			exit (EXIT_FAILURE);
 		}
@@ -920,7 +921,7 @@ int compar_special_int(const void * a, const void * b) {
 }
 
 countKeys * uniqsort(uint64_t * possibleKeys, uint32_t size) {
-	int i, j = 0;
+	unsigned int i, j = 0;
 	int count = 0;
 	countKeys *our_counts;
 	
