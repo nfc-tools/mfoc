@@ -164,7 +164,7 @@ int main(int argc, char * const argv[]) {
 	}
 	
 	// Initialize reader/tag structures
-	mf_init(&t, &r);
+	mf_init(&r);
 
 	if (nfc_initiator_init (r.pdi) < 0) {
 		nfc_perror (r.pdi, "nfc_initiator_init");
@@ -542,7 +542,7 @@ void usage(FILE * stream, int errno) {
 	exit(errno);
 }
 
-void mf_init(mftag *t, mfreader *r) {
+void mf_init(mfreader *r) {
 	// Connect to the first NFC device
 	nfc_init(NULL);
 	r->pdi = nfc_open(NULL, NULL);
