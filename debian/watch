@@ -3,5 +3,5 @@
 # Compulsory line, this is a version 3 file
 version=3
 
-http://googlecode.debian.net/p/nfc-tools/mfoc-(.*)\.tar\.gz
+http://code.google.com/p/nfc-tools/downloads/list .*/mfoc-(.*).tar.gz
 
