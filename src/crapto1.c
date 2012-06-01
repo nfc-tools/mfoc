@@ -22,7 +22,7 @@
 
 #if !defined LOWMEM && defined __GNUC__
 static uint8_t filterlut[1 << 20];
-static void __attribute__((constructor)) fill_lut()
+static void __attribute__((constructor)) fill_lut(void)
 {
         uint32_t i;
         for(i = 0; i < 1 << 20; ++i)
@@ -308,6 +308,11 @@ struct Crypto1State* lfsr_recovery64(uint32_t ks2, uint32_t ks3)
 	return statelist;
 }
 
+uint8_t lfsr_rollback_bit(struct Crypto1State *s, uint32_t in, int fb);
+uint8_t lfsr_rollback_byte(struct Crypto1State *s, uint32_t in, int fb);
+uint32_t lfsr_rollback_word(struct Crypto1State *s, uint32_t in, int fb);
+uint32_t *lfsr_prefix_ks(uint8_t ks[8], int isodd);
+
 /** lfsr_rollback_bit
  * Rollback the shift register in order to get previous states
  */
@@ -443,6 +448,8 @@ check_pfx_parity(uint32_t prefix, uint32_t rresp, uint8_t parities[8][8],
 	return sl + good;
 } 
 
+
+struct Crypto1State* lfsr_common_prefix(uint32_t pfx, uint32_t rr, uint8_t ks[8], uint8_t par[8][8]);
 
 /** lfsr_common_prefix
  * Implentation of the common prefix attack.

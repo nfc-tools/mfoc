@@ -1,4 +1,4 @@
-AC_INIT([mfoc], [0.10.3], [mifare@nethemba.com])
+AC_INIT([mfoc],[0.10.3],[mifare@nethemba.com])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -13,8 +13,8 @@ AM_INIT_AUTOMAKE
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
 # Checks for pkg-config modules.
-LIBNFC_REQUIRED_VERSION=1.5.1
-PKG_CHECK_MODULES([LIBNFC], [libnfc >= $LIBNFC_REQUIRED_VERSION], [], [AC_MSG_ERROR([libnfc >= $LIBNFC_REQUIRED_VERSION is mandatory.])])
+LIBNFC_REQUIRED_VERSION=1.6.0
+PKG_CHECK_MODULES([libnfc], [libnfc >= $LIBNFC_REQUIRED_VERSION], [], [AC_MSG_ERROR([libnfc >= $LIBNFC_REQUIRED_VERSION is mandatory.])])
 
 PKG_CONFIG_REQUIRES="libnfc"
 AC_SUBST([PKG_CONFIG_REQUIRES])
@@ -33,6 +33,9 @@ AC_TYPE_UINT64_T
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset])
+
+# C99
+CFLAGS="$CFLAGS -std=c99"
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])

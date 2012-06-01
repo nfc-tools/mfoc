@@ -32,10 +32,13 @@
 
 /* vim: set ts=2 sw=2 et: */
 
+#define _XOPEN_SOURCE 1 // To enable getopt
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
+
+#include <unistd.h>
 
 // NFC
 #include <nfc/nfc.h>
@@ -55,7 +58,7 @@ int main(int argc, char * const argv[]) {
 		.nbr = NBR_106,
 	};
 
-	int ch, i, k, n, j, m, o;
+	int ch, i, k, n, j, m;
 	int key, block;
 	int succeed = 1;
 	
@@ -120,12 +123,16 @@ int main(int argc, char * const argv[]) {
 				// fprintf(stdout, "Number of probes: %d\n", probes);
 				break;
 			case 'T':
+			{
+				int res;
 				// Nonce tolerance range
-				if (!(d.tolerance = atoi(optarg)) || d.tolerance < 0) {
+				if (((res = atoi(optarg)) != 0) || (res < 0)) {
 					ERR ("The nonce distances range must be a zero or a positive number"); 
 					exit (EXIT_FAILURE);
 				}
+				d.tolerance = (uint32_t)res;
 				// fprintf(stdout, "Tolerance number: %d\n", probes);
+			}
 				break;
 			case 'k':
 				// Add this key to the default keys
@@ -235,15 +242,15 @@ int main(int argc, char * const argv[]) {
 		bk->size = 0; 
 	}
 		
-	d.distances = (void *) calloc(d.num_distances, sizeof(u_int32_t));
+	d.distances = (void *) calloc(d.num_distances, sizeof(uint32_t));
 	if (d.distances == NULL) {
 		ERR ("Cannot allocate memory for t.distances"); 
 		goto error;
 	}		
 	
 	// Initialize t.sectors, keys are not known yet
-	for (i = 0; i < (t.num_sectors); ++i) {
-		t.sectors[i].foundKeyA = t.sectors[i].foundKeyB = false;
+	for (uint8_t s = 0; s < (t.num_sectors); ++s) {
+		t.sectors[s].foundKeyA = t.sectors[s].foundKeyB = false;
 	}
 	
 	print_nfc_iso14443a_info (t.nt.nti.nai, true);
@@ -332,7 +339,7 @@ int main(int argc, char * const argv[]) {
 				
 				// First, try already broken keys
 				skip = false;
-				for (o = 0; o < bk->size; o++) {
+				for (uint32_t o = 0; o < bk->size; o++) {
 					num_to_bytes(bk->brokenKeys[o], 6, mp.mpa.abtKey);
 					mc = dumpKeysA ? 0x60 : 0x61;
 					if (!nfc_initiator_mifare_cmd(r.pdi,mc,t.sectors[j].trailer,&mp)) {
@@ -662,7 +669,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	uint8_t RxPar[MAX_FRAME_LEN]; // Tag response
 	size_t RxLen;
 	
-	u_int32_t Nt, NtLast, NtProbe, NtEnc, Ks1;
+	uint32_t Nt, NtLast, NtProbe, NtEnc, Ks1;
 
 	int i, m;
 	
@@ -685,7 +692,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 		exit (EXIT_FAILURE);
 	}
 
-	if (nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, &RxLen, 0) < 0) {
+	if (nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, sizeof(Rx), 0) < 0) {
 		fprintf(stdout, "Error while requesting plain tag-nonce\n");
 		exit(EXIT_FAILURE);
 	}
@@ -900,7 +907,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 // Return the median value from the nonce distances array
 uint32_t median(denonce d) {
 	int middle = (int) d.num_distances / 2;
-	qsort(d.distances, d.num_distances, sizeof(u_int32_t), compar_int);
+	qsort(d.distances, d.num_distances, sizeof(uint32_t), compar_int);
 	
 	if (d.num_distances % 2 == 1) {
 		// Odd number of elements

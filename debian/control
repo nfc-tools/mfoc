@@ -2,7 +2,7 @@ Source: mfoc
 Section: utils
 Priority: extra
 Maintainer: Thomas Hood <jdthood@gmail.com>
-Build-Depends: debhelper (>= 7.0.50~), dh-autoreconf, libnfc-dev (>= 1.5.1), pkg-config
+Build-Depends: debhelper (>= 7.0.50~), dh-autoreconf, libnfc-dev (>= 1.6.0), pkg-config
 Standards-Version: 3.9.2
 Homepage: http://code.google.com/p/nfc-tools/wiki/mfoc
 Vcs-Svn: http://nfc-tools.googlecode.com/svn/trunk/mfoc
@@ -10,7 +10,7 @@ Vcs-Browser: http://code.google.com/p/nfc-tools/source/browse/#svn/trunk/mfoc
 
 Package: mfoc
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libnfc2 (>= 1.5.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: MIFARE Classic offline cracker
  This package includes the mfoc program which cracks the
  encryption keys of the MIFARE Classic chip and dumps the
