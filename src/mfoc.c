@@ -311,8 +311,6 @@ int main(int argc, char * const argv[]) {
 					fprintf(stdout, ".");
 				}
 				fflush(stdout);
-				mf_configure(r.pdi);
-				mf_anticollision(t, r);
 				// fprintf(stdout, "\nSuccess: AUTH [Key %c:%012llx] sector %02x t_block %02x\n", 
 				// 	(mc == MC_AUTH_A ? 'A' :'B'), bytes_to_num(mp.mpa.abtKey, 6), i, block);
 				// Save position of a trailer block to sector struct
