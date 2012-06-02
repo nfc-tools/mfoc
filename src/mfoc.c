@@ -301,8 +301,12 @@ int main(int argc, char * const argv[]) {
 						t.sectors[i].foundKeyB = true;
 					}
 				}
-				if ((t.sectors[i].foundKeyA) || (t.sectors[i].foundKeyB)) {
+				if ((t.sectors[i].foundKeyA) && (t.sectors[i].foundKeyB)) {
 					fprintf(stdout, "x");
+				} else if (t.sectors[i].foundKeyA) {
+					fprintf(stdout, "/");
+				} else if (t.sectors[i].foundKeyB) {
+					fprintf(stdout, "\\");
 				} else {
 					fprintf(stdout, ".");
 				}
