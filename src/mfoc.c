@@ -257,7 +257,7 @@ int main(int argc, char * const argv[]) {
 	
 	// Try to authenticate to all sectors with default keys
 	// Set the authentication information (uid)
-	memcpy(mp.mpa.abtUid, t.nt.nti.nai.abtUid, sizeof(mp.mpa.abtUid));
+	memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
 	// Iterate over all keys (n = number of keys)
 	n = sizeof(defaultKeys)/sizeof(defaultKeys[0]);
 	size_t defKey_bytes_todo = defKeys_len;
@@ -336,7 +336,7 @@ int main(int argc, char * const argv[]) {
 	for (m = 0; m < 2; ++m) {
 		if (e_sector == -1) break; // All keys are default, I am skipping recovery mode
 		for (j = 0; j < (t.num_sectors); ++j) {
-			memcpy(mp.mpa.abtUid, t.nt.nti.nai.abtUid, sizeof(mp.mpa.abtUid));
+			memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
 			if ((dumpKeysA && !t.sectors[j].foundKeyA) || (!dumpKeysA && !t.sectors[j].foundKeyB)) {
 				
 				// First, try already broken keys
@@ -500,7 +500,7 @@ int main(int argc, char * const argv[]) {
 				memcpy(mtDump.amb[block].mbt.abtKeyB,t.sectors[i].KeyB,6);
 				if (!failure) memcpy(mtDump.amb[block].mbt.abtAccessBits,mp.mpd.abtData+6,4);
 			} else if (!failure) memcpy(mtDump.amb[block].mbd.abtData, mp.mpd.abtData,16);
-			memcpy(mp.mpa.abtUid,t.nt.nti.nai.abtUid,4);
+			memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
 		}
 			
 		// Finally save all keys + data to file
