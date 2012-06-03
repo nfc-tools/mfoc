@@ -110,6 +110,9 @@ nfc_initiator_mifare_cmd(nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8
       // authenticated on a sector but the requested MIFARE cmd (read, write)
       // is not permitted by current acces bytes;
       // So there is nothing to do here.
+    } else if (res == NFC_ETGRELEASED) {
+      // If AUTH_* command fails, returned error is NFC_ETGRELEASED
+      // So there is nothing to do here. (don't hurt the user ;-))
     } else {
       nfc_perror(pnd, "nfc_initiator_transceive_bytes");
     }
