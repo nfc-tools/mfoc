@@ -48,7 +48,7 @@ int nonce_distance(uint32_t from, uint32_t to);
 				break;\
 			else if(__i)\
 				__M = prng_successor(__M, (__i == 7) ? 48 : 8);\
-			else 
+			else
 
 #define LF_POLY_ODD (0x29CE5C)
 #define LF_POLY_EVEN (0x870804)

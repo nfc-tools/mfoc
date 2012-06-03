@@ -30,15 +30,15 @@ typedef struct {
 	bool foundKeyB;
         uint8_t trailer;                         // Value of a trailer block
 } sector;
- 
+
 typedef struct {
         uint32_t       *distances;
         uint32_t       median;
         uint32_t       num_distances;
         uint32_t       tolerance;
         uint8_t          parity[3];              // used for 3 bits of parity information
-} denonce;                                      // Revealed information about nonce 
- 
+} denonce;                                      // Revealed information about nonce
+
 typedef struct {
         nfc_target	nt;
         sector *        sectors;                // Allocate later, we do not know the number of sectors yet
@@ -46,9 +46,9 @@ typedef struct {
         uint8_t        num_sectors;
         uint8_t        num_blocks;
         uint32_t        uid;
-        bool            b4K;    
+        bool            b4K;
 } mftag;
- 
+
 typedef struct {
         uint64_t        *possibleKeys;
         uint32_t        size;
