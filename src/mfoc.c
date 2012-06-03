@@ -214,13 +214,9 @@ int main(int argc, char * const argv[]) {
 		goto error;
 	}
 
-	// TODO: Support Mifare Classic with 7 bytes UID ?
-	if (t.nt.nti.nai.szUidLen != 4) {
-		ERR ("only Mifare Classic with UID on 4 bytes are supported");
-	}
 	// Save tag's block size (b4K)
 	t.b4K = (t.nt.nti.nai.abtAtqa[1] == 0x02);
-	t.uid = (uint32_t) bytes_to_num(t.nt.nti.nai.abtUid, 4);
+	t.authuid = (uint32_t) bytes_to_num(t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, 4);
 
 	t.num_blocks = (t.b4K) ? 0xff : 0x3f;
 	t.num_sectors = t.b4K ? NR_TRAILERS_4k : NR_TRAILERS_1k;
@@ -432,7 +428,7 @@ int main(int argc, char * const argv[]) {
 				// We haven't found any key, exiting
 				if ((dumpKeysA && !t.sectors[j].foundKeyA) || (!dumpKeysA && !t.sectors[j].foundKeyB)) {
 					ERR ("No success, maybe you should increase the probes");
-					exit (EXIT_FAILURE);
+					goto error;
 				}
 			}
 		}
@@ -507,7 +503,7 @@ int main(int argc, char * const argv[]) {
 		if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
 			fprintf(stdout, "Error, cannot write dump\n");
 			fclose(pfDump);
-			exit (EXIT_FAILURE);
+			goto error;
 		}
 		fclose(pfDump);
 	}
@@ -716,7 +712,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	}
 
 	// Load (plain) uid^nt into the cipher {48..79} bits
-	crypto1_word(pcs, bytes_to_num(Rx, 4) ^ t.uid, 0);
+	crypto1_word(pcs, bytes_to_num(Rx, 4) ^ t.authuid, 0);
 
 	// Generate (encrypted) nr+parity by loading it into the cipher
 	for (i = 0; i < 4; i++) {
@@ -785,7 +781,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			} else {
 				pcs = crypto1_create(bytes_to_num(t.sectors[e_sector].KeyB, 6));
 			}
-			NtLast = bytes_to_num(Rx, 4) ^ crypto1_word(pcs, bytes_to_num(Rx, 4) ^ t.uid, 1);
+			NtLast = bytes_to_num(Rx, 4) ^ crypto1_word(pcs, bytes_to_num(Rx, 4) ^ t.authuid, 1);
 
 			// Save the determined nonces distance
 			d->distances[m] = nonce_distance(Nt, NtLast);
@@ -868,12 +864,12 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			revstate_start = NULL;
 			if (valid_nonce(NtProbe, NtEnc, Ks1, d->parity)) {
 				// And finally recover the first 32 bits of the key
-				revstate = lfsr_recovery32(Ks1, NtProbe ^ t.uid);
+				revstate = lfsr_recovery32(Ks1, NtProbe ^ t.authuid);
                                 if (revstate_start == NULL) {
                                         revstate_start = revstate;
                                 }
 				while ((revstate->odd != 0x0) || (revstate->even != 0x0)) {
-					lfsr_rollback_word(revstate, NtProbe ^ t.uid, 0);
+					lfsr_rollback_word(revstate, NtProbe ^ t.authuid, 0);
 					crypto1_get_lfsr(revstate, &lfsr);
 					// Allocate a new space for keys
 					if (((kcount % MEM_CHUNK) == 0) || (kcount >= pk->size)) {

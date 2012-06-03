@@ -45,7 +45,7 @@ typedef struct {
 	sector		e_sector;		// Exploit sector
         uint8_t        num_sectors;
         uint8_t        num_blocks;
-        uint32_t        uid;
+        uint32_t        authuid;
         bool            b4K;
 } mftag;
 
