@@ -126,7 +126,7 @@ int main(int argc, char * const argv[]) {
 			{
 				int res;
 				// Nonce tolerance range
-				if (((res = atoi(optarg)) != 0) || (res < 0)) {
+				if (((res = atoi(optarg)) < 0)) {
 					ERR ("The nonce distances range must be a zero or a positive number");
 					exit (EXIT_FAILURE);
 				}
