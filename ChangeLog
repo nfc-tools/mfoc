@@ -1,90 +1,83 @@
-2011-05-18 09:18  rconty@il4p.fr
+2011-05-18  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c: mfoc: improve tests made before running and show tag
-	  info using print_nfc_iso14443a_info()
+	* src/mfoc.c: improve tests made before running and show tag info
+	using print_nfc_iso14443a_info()
 
-2011-04-08 15:19  rconty@il4p.fr
+2011-04-08  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c: mfoc: try to disconnect() the device on error.
+	* src/mfoc.c: try to disconnect() the device on error.
 
-2011-04-08 10:05  rconty@il4p.fr
+2011-04-08  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c: mfoc: show errors then exit on mf_configure()
+	* src/mfoc.c: show errors then exit on mf_configure()
 
-2011-04-08 09:32  rconty@il4p.fr
+2011-04-08  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c: mfoc: apply a patch suggested by Valentijn Sessink.
-	  See Issue 56.
+	* src/mfoc.c: apply a patch suggested by Valentijn Sessink. See
+	Issue 56.
 
-2011-04-08 09:17  rconty@il4p.fr
+2011-04-08  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c: mfoc: minors fixes and indent.
+	* src/mfoc.c: minors fixes and indent.
 
-2011-04-08 08:54  rconty@il4p.fr
+2011-04-08  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c: mfoc: show error (using nfc_perror) then exit if some
-	  nfc_* functions failed on init.
+	* src/mfoc.c: show error (using nfc_perror) then exit if some nfc_*
+	functions failed on init.
 
-2011-04-08 08:35  rconty@il4p.fr
+2011-04-08  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c: mfoc: minor debug improvements.
+	* src/mfoc.c: minor debug improvements.
 
-2011-04-04 12:28  rconty@il4p.fr
+2011-04-04  Romuald Conty <romuald@libnfc.org>
 
-	* configure.ac, src/mfoc.c: mfoc: minor fixes/enhancements and
-	  version bumping
+	* configure.ac, src/mfoc.c: minor fixes/enhancements and version
+	bumping
 
-2011-04-04 10:38  rconty@il4p.fr
+2011-04-04  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c, src/mifare.c: mfoc: hide authentication errors
+	* src/mfoc.c, src/mifare.c: hide authentication errors
 
-2011-04-04 10:01  rconty@il4p.fr
+2011-04-04  Romuald Conty <romuald@libnfc.org>
 
-	* src/mifare.c, src/mifare.h, src/nfc-utils.c, src/nfc-utils.h:
-	  mfoc: sync nfc-utils.h/c and mifare.c/h with libnfc's ones.
+	* src/mifare.c, src/mifare.h, src/nfc-utils.c, src/nfc-utils.h: sync
+	nfc-utils.h/c and mifare.c/h with libnfc's ones.
 
-2011-02-21 16:26  rtartiere@il4p.fr
+2011-02-21  Romain Tartiere <romain.tartiere@gmail.com>
 
 	* src/Makefile.am: mfox: Unbreak autotools on FreeBSD.
 
-2011-02-02 10:46  rconty@il4p.fr
+2011-02-02  Romuald Conty <romuald@libnfc.org>
 
-	* src/mfoc.c: mfoc: use strtoll() function in order to retrieve
-	  64bits wide value. (Fixes Issue 55)
+	* src/mfoc.c: use strtoll() function in order to retrieve 64bits
+	wide value. (Fixes Issue 55)
 
-2010-11-18 11:20  rconty@il4p.fr
+2010-11-18  Romuald Conty <romuald@libnfc.org>
 
-	* configure.ac: mfoc: bump package version
+	* configure.ac: bump package version
 
-2010-11-18 11:18  rconty@il4p.fr
+2010-11-18  Romuald Conty <romuald@libnfc.org>
 
-	* src/nfc-utils.c, src/nfc-utils.h: mfoc: sync nfc-utils.* from
-	  libnfc
+	* src/nfc-utils.c, src/nfc-utils.h: sync nfc-utils.* from libnfc
 
-2010-11-02 09:36  rconty@il4p.fr
+2010-11-02  Romuald Conty <romuald@libnfc.org>
 
 	* configure.ac, src/mfoc.c, src/mfoc.h, src/nfc-utils.c,
-	  src/nfc-utils.h: mfoc: upgrade code to work with develoment
-	  version of libnfc (upcomming 1.4.0)
-	  Update code to match with the new API;
-	  Sync nfc-utils.[ch] from libnfc's repo;
-	  Update ./configure to detect libnfc 1.4.0;
+	src/nfc-utils.h: upgrade code to work with develoment version of
+	libnfc (upcomming 1.4.0) Update code to match with the new API; Sync
+	nfc-utils.[ch] from libnfc's repo; Update ./configure to detect
+	libnfc 1.4.0;
 
-2010-09-14 09:38  rconty@il4p.fr
+2010-09-14  Romuald Conty <romuald@libnfc.org>
 
-	* ., AUTHORS, Makefile.in, aclocal.m4, autogen.sh, config.h,
-	  config.h.in, configure, configure.ac, depcomp, install-sh,
-	  missing, src, src/Makefile.am, src/mfoc.c, src/mifare.c,
-	  src/mifare.h, src/nfc-utils.c, src/nfc-utils.h: mfoc: update code
-	  in order to use libnfc 1.3.9, minor clean up, and minor
-	  enhancements.
+	* AUTHORS, Makefile.in, aclocal.m4, autogen.sh, config.h,
+	config.h.in, configure, configure.ac, depcomp, install-sh, missing,
+	src/Makefile.am, src/mfoc.c, src/mifare.c, src/mifare.h,
+	src/nfc-utils.c, src/nfc-utils.h: update code in order to use libnfc
+	1.3.9, minor clean up, and minor enhancements.
 
-2010-09-14 09:34  rconty@il4p.fr
+2010-09-14  Romuald Conty <romuald@libnfc.org>
 
-	* ., AUTHORS, COPYING, ChangeLog, INSTALL, Makefile.am,
-	  Makefile.in, NEWS, README, TODO, aclocal.m4, autogen.sh,
-	  config.h, config.h.in, configure, configure.ac, depcomp,
-	  install-sh, missing, src, src/Makefile.am, src/crapto1.c,
-	  src/crapto1.h, src/crypto1.c, src/mfoc.c, src/mfoc.h: Import MFOC
-	  0.08 from http://www.nethemba.com/mfoc.tar.bz2 on 13th Sept 2010
+	* Import MFOC 0.08 from http://www.nethemba.com/mfoc.tar.bz2 on 13th
+	Sept 2010
 
