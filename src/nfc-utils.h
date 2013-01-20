@@ -1,8 +1,9 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
  *
- * Copyright (C) 2009, Roel Verdult
- * Copyright (C) 2010, Romuald Conty, Romain Tartière
+ * Copyright (C) 2009 Roel Verdult
+ * Copyright (C) 2010 Romain Tartière
+ * Copyright (C) 2010, 2011, 2012 Romuald Conty
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -79,23 +80,20 @@
 #  define ERR(...)  warnx ("ERROR: " __VA_ARGS__ )
 #endif
 
-uint8_t  oddparity (const uint8_t bt);
-void    oddparity_uint8_ts (const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
+#ifndef MIN
+#define MIN(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+#ifndef MAX
+#define MAX(a,b) (((a) > (b)) ? (a) : (b))
+#endif
 
-void    print_hex (const uint8_t *pbtData, const size_t szLen);
-void    print_hex_bits (const uint8_t *pbtData, const size_t szBits);
-void    print_hex_par (const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar);
+uint8_t  oddparity(const uint8_t bt);
+void    oddparity_bytes_ts(const uint8_t *pbtData, const size_t szLen, uint8_t *pbtPar);
 
-void    print_nfc_iso14443a_info (const nfc_iso14443a_info nai, bool verbose);
-void    print_nfc_iso14443b_info (const nfc_iso14443b_info nbi, bool verbose);
-void    print_nfc_iso14443bi_info (const nfc_iso14443bi_info nii, bool verbose);
-void    print_nfc_iso14443b2sr_info (const nfc_iso14443b2sr_info nsi, bool verbose);
-void    print_nfc_iso14443b2ct_info (const nfc_iso14443b2ct_info nci, bool verbose);
-void    print_nfc_felica_info (const nfc_felica_info nfi, bool verbose);
-void    print_nfc_jewel_info (const nfc_jewel_info nji, bool verbose);
-void    print_nfc_dep_info (const nfc_dep_info ndi, bool verbose);
-const char * str_nfc_baud_rate (const nfc_baud_rate nbr);
+void    print_hex(const uint8_t *pbtData, const size_t szLen);
+void    print_hex_bits(const uint8_t *pbtData, const size_t szBits);
+void    print_hex_par(const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDataPar);
 
-void    print_nfc_target (const nfc_target nt, bool verbose);
+void    print_nfc_target(const nfc_target nt, bool verbose);
 
 #endif

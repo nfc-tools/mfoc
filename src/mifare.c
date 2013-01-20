@@ -1,8 +1,9 @@
 /*-
  * Public platform independent Near Field Communication (NFC) library examples
  *
- * Copyright (C) 2009, Roel Verdult
- * Copyright (C) 2010, Romuald Conty, Romain Tartière
+ * Copyright (C) 2009 Roel Verdult
+ * Copyright (C) 2010 Romain Tartière
+ * Copyright (C) 2010, 2011 Romuald Conty
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -110,9 +111,6 @@ nfc_initiator_mifare_cmd(nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8
       // authenticated on a sector but the requested MIFARE cmd (read, write)
       // is not permitted by current acces bytes;
       // So there is nothing to do here.
-    } else if (res == NFC_ETGRELEASED) {
-      // If AUTH_* command fails, returned error is NFC_ETGRELEASED
-      // So there is nothing to do here. (don't hurt the user ;-))
     } else {
       nfc_perror(pnd, "nfc_initiator_transceive_bytes");
     }
