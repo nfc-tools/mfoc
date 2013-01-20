@@ -1,3 +1,9 @@
+mfoc (0.10.4-0) unstable; urgency=low
+
+  * New upstream release
+
+ -- Romuald Conty <romuald@libnfc.org>  Sun, 20 Jan 2013 15:58:42 +0100
+
 mfoc (0.10.2pre3.1-0) unstable; urgency=low
 
   * Initial package

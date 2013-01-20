@@ -1,0 +1,6 @@
+autoreconf.after
+autoreconf.before
+files
+mfoc.debhelper.log
+mfoc.substvars
+mfoc/
