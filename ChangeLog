@@ -1,3 +1,163 @@
+2013-01-20  Romuald Conty <romuald@libnfc.org>
+
+	* ChangeLog: Update outdated email addresses
+
+2013-01-20  Romuald Conty <romuald@libnfc.org>
+
+	* src/crapto1.c, src/crapto1.h, src/crypto1.c, src/mfoc.c,
+	src/mfoc.h: Format source code with "make style"
+
+2013-01-20  Romuald Conty <romuald@libnfc.org>
+
+	* Makefile.am: Add "make style" directive to format source code
+
+2013-01-20  Romuald Conty <romuald@libnfc.org>
+
+	* configure.ac, src/mfoc.c: Updates source to use libnfc 1.7.0
+
+2013-01-20  Romuald Conty <romuald@libnfc.org>
+
+	* src/mifare.c, src/mifare.h, src/nfc-utils.c, src/nfc-utils.h: 
+	Update mifare.* and nfc-utils.* from libnfc utils directory
+
+2013-01-20  Romuald Conty <romuald@libnfc.org>
+
+	* .gitignore: Ignore generated files in source repository
+
+2012-10-14  Romuald Conty <romuald@libnfc.org>
+
+	* src/mfoc.c: Fix tolerance (-T) option (Fixes issue 102) Thanks to
+	fnargwibble
+
+2012-06-03  Romuald Conty <romuald@libnfc.org>
+
+	* src/mifare.c: do not display an error when authentication failed
+
+2012-06-03  Romuald Conty <romuald@libnfc.org>
+
+	* src/mfoc.c, src/mfoc.h: use authuid instead uid name when handling
+	the authentication uid bytes (different from UID with 7bytes MIFARE
+	Classic
+
+2012-06-03  Romuald Conty <romuald@libnfc.org>
+
+	* src/crapto1.h, src/mfoc.c, src/mfoc.h, src/mifare.c,
+	src/mifare.h, src/nfc-utils.c, src/nfc-utils.h: some code clean up:
+	find . -name '*.[ch]' | xargs perl -pi -e 's/\t+$//; s/ +$//'
+
+2012-06-02  Romuald Conty <romuald@libnfc.org>
+
+	* src/mfoc.c, src/mifare.h: Allow to find default keys using 7bytes
+	UID MIFARE Classic tags
+
+2012-06-02  Romuald Conty <romuald@libnfc.org>
+
+	* src/mfoc.c: Remove not requiered anticol and configuration, its
+	speed up default keys search
+
+2012-06-02  Romuald Conty <romuald@libnfc.org>
+
+	* src/mfoc.c: Enhance default keys search result: '/', '\' and 'x'
+	means respectively A, B and both key(s) found.
+
+2012-06-01  Romuald Conty <romuald@libnfc.org>
+
+	* INSTALL, configure.ac, debian/control, src/Makefile.am,
+	src/crapto1.c, src/mfoc.c, src/mfoc.h, src/mifare.c: foc> source
+	 code maintenance: - upgrade to last libnfc devel API  - removes various warnings  - update debian package
+
+2012-05-28  Ludovic Rousseau <ludovic.rousseau@gmail.com>
+
+	* debian/watch: Update upstream URL Closes Issue #92
+
+2012-05-22  Ludovic Rousseau <ludovic.rousseau@gmail.com>
+
+	* debian/control: Upgrade libnfc-dev version in Build-Depends: Closes Issue #91
+
+2012-05-14  Romain Tartiere <romain.tartiere@gmail.com>
+
+	* src/crapto1.h: Export lfsr_rollback_word().
+
+2012-05-14  Romain Tartiere <romain.tartiere@gmail.com>
+
+	* src/mfoc.c, src/mfoc.h: Drop unused argument.
+
+2012-05-14  Romain Tartiere <romain.tartiere@gmail.com>
+
+	* src/mfoc.c, src/mfoc.h: Fix a bunch of signed/unsigned
+	comparisons.
+
+2012-05-14  Romain Tartiere <romain.tartiere@gmail.com>
+
+	* configure.ac: Complete configure.ac.
+
+2012-05-14  Romain Tartiere <romain.tartiere@gmail.com>
+
+	* src/Makefile.am: Rely on variables set by the autotools.
+
+2012-01-26  Audrey Diacre <adiacre@il4p.fr>
+
+	* src/mfoc.c, src/mfoc.h, src/mifare.c, src/mifare.h,
+	src/nfc-utils.c, src/nfc-utils.h: update to use libnfc's trunk
+
+2011-10-17  Romuald Conty <romuald@libnfc.org>
+
+	* configure.ac, src/Makefile.am: compilation improvements (Thanks to
+	Thomas Hood)
+
+2011-09-28  Romuald Conty <romuald@libnfc.org>
+
+	* configure.ac, src/mfoc.c, src/mifare.c: Sync w/ libnfc-1.5.1
+	(Fixes Issue 79)
+
+2011-07-11  Romuald Conty <romuald@libnfc.org>
+
+	* src/nfc-utils.c: sync nfc-utils.c with libnfc trunk.
+
+2011-05-20  Romuald Conty <romuald@libnfc.org>
+
+	* debian/control, debian/watch: debian: update pam_nfc, mfoc and
+	libfreefare packages to use dh7.
+
+2011-05-20  Romuald Conty <romuald@libnfc.org>
+
+	* INSTALL, debian/control: debian: silent lintian warning
+
+2011-05-20  Romuald Conty <romuald@libnfc.org>
+
+	* src/mfoc.c: usage output is now more standard (Thanks to Thomas
+	Hood)
+
+2011-05-20  Romuald Conty <romuald@libnfc.org>
+
+	* debian/changelog, debian/control, debian/rules: debian package now
+	use dh_autoreconf to build against svn.
+
+2011-05-19  Romuald Conty <romuald@libnfc.org>
+
+	* debian/rules: in some cases ./configure file needs to be chmoded
+	(dpkg-source -b mfoc).
+
+2011-05-19  Romuald Conty <romuald@libnfc.org>
+
+	* AUTHORS, debian/changelog, debian/compat, debian/control,
+	debian/copyright, debian/docs, debian/manpages, debian/rules,
+	debian/source/format, debian/watch: import debian files (Thanks to
+	Thomas Hood)
+
+2011-05-18  Romuald Conty <romuald@libnfc.org>
+
+	* src/Makefile.am, src/mfoc.1: add manpage (Thanks to Thomas Hood)
+
+2011-05-18  Romuald Conty <romuald@libnfc.org>
+
+	* src/mfoc.c: read multiple keys from command line (Thanks to Frank
+	Morgner) (Fixes Issue 63)
+
+2011-05-18  Romuald Conty <romuald@libnfc.org>
+
+	* ChangeLog, configure.ac: prepare 0.10.2 release
+
 2011-05-18  Romuald Conty <romuald@libnfc.org>
 
 	* src/mfoc.c: improve tests made before running and show tag info
