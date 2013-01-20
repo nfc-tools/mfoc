@@ -30,8 +30,6 @@
  URL http://www.cs.ru.nl/~petervr/papers/grvw_2009_pickpocket.pdf
 */
 
-/* vim: set ts=2 sw=2 et: */
-
 #define _XOPEN_SOURCE 1 // To enable getopt
 
 #include <stdio.h>
@@ -51,6 +49,8 @@
 #include "mifare.h"
 #include "nfc-utils.h"
 #include "mfoc.h"
+
+nfc_context *context;
 
 int main(int argc, char * const argv[]) {
 	const nfc_modulation nm = {
@@ -249,7 +249,7 @@ int main(int argc, char * const argv[]) {
 		t.sectors[s].foundKeyA = t.sectors[s].foundKeyB = false;
 	}
 
-	print_nfc_iso14443a_info (t.nt.nti.nai, true);
+	print_nfc_target (t.nt, true);
 
 	// Try to authenticate to all sectors with default keys
 	// Set the authentication information (uid)
@@ -517,11 +517,11 @@ int main(int argc, char * const argv[]) {
 
 	// Disconnect device and exit
 	nfc_close(r.pdi);
-    nfc_exit(NULL);
+    nfc_exit(context);
     exit (EXIT_SUCCESS);
 error:
     nfc_close(r.pdi);
-    nfc_exit(NULL);
+    nfc_exit(context);
     exit (EXIT_FAILURE);
 }
 
@@ -549,8 +549,8 @@ void usage(FILE * stream, int errno) {
 
 void mf_init(mfreader *r) {
 	// Connect to the first NFC device
-	nfc_init(NULL);
-	r->pdi = nfc_open(NULL, NULL);
+	nfc_init(&context);
+	r->pdi = nfc_open(context, NULL);
 	if (!r->pdi) {
 		printf ("No NFC device found.\n");
 		exit (EXIT_FAILURE);
@@ -597,7 +597,7 @@ void mf_select_tag(nfc_device* pdi, nfc_target* pnt) {
 	if (nfc_initiator_select_passive_target(pdi, nm, NULL, 0, pnt) < 0) {
 		ERR ("Unable to connect to the MIFARE Classic tag");
 		nfc_close(pdi);
-        nfc_exit(NULL);
+        nfc_exit(context);
 		exit (EXIT_FAILURE);
 	}
 }
@@ -665,7 +665,6 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 
 	uint8_t Rx[MAX_FRAME_LEN]; // Tag response
 	uint8_t RxPar[MAX_FRAME_LEN]; // Tag response
-	size_t RxLen;
 
 	uint32_t Nt, NtLast, NtProbe, NtEnc, Ks1;
 
@@ -741,7 +740,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 	// fprintf(stdout, "\t{Ar}:\t");
 	// print_hex_par(ArEnc, 64, ArEncPar);
 	int res;
-	if (((res = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, RxPar)) < 0) || (res != 32)) {
+	if (((res = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, sizeof(Rx), RxPar)) < 0) || (res != 32)) {
 		ERR ("Reader-answer transfer error, exiting..");
 		exit (EXIT_FAILURE);
 	}
@@ -770,7 +769,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			}
 
 			// Sending the encrypted Auth command
-			if (nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, RxPar) < 0) {
+			if (nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar, Rx, sizeof(Rx), RxPar) < 0) {
 				fprintf(stdout, "Error requesting encrypted tag-nonce\n");
 				exit (EXIT_FAILURE);
 			}
@@ -799,7 +798,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 				ArEncPar[i] = filter(pcs->odd) ^ oddparity(Nt);
 			}
 			nfc_device_set_property_bool(r.pdi,NP_HANDLE_PARITY,false);
-			if (((res = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, RxPar)) < 0) || (res != 32)) {
+			if (((res = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, sizeof(Rx), RxPar)) < 0) || (res != 32)) {
 				ERR ("Reader-answer transfer error, exiting..");
 				exit (EXIT_FAILURE);
 			}
@@ -828,7 +827,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 			// Encrypt the parity bits with the 4 plaintext bytes
 			AuthEncPar[i] = filter(pcs->odd) ^ oddparity(Auth[i]);
 		}
-		if (nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar,Rx, RxPar) < 0) {
+		if (nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar, Rx, sizeof(Rx), RxPar) < 0) {
 			ERR ("while requesting encrypted tag-nonce");
 			exit (EXIT_FAILURE);
 		}
