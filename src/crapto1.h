@@ -62,13 +62,13 @@ extern "C" {
     x ^= x >> 4;
     return BIT(0x6996, x & 0xf);
 #else
-    asm("movl %1, %%eax\n"
-        "mov %%ax, %%cx\n"
-        "shrl $0x10, %%eax\n"
-        "xor %%ax, %%cx\n"
-        "xor %%ch, %%cl\n"
-        "setpo %%al\n"
-        "movzx %%al, %0\n": "=r"(x) : "r"(x): "eax", "ecx");
+    __asm__("movl %1, %%eax\n"
+            "mov %%ax, %%cx\n"
+            "shrl $0x10, %%eax\n"
+            "xor %%ax, %%cx\n"
+            "xor %%ch, %%cl\n"
+            "setpo %%al\n"
+            "movzx %%al, %0\n": "=r"(x) : "r"(x): "eax", "ecx");
     return x;
 #endif
   }
