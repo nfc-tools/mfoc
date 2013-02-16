@@ -2,7 +2,7 @@ Source: mfoc
 Section: utils
 Priority: extra
 Maintainer: Thomas Hood <jdthood@gmail.com>
-Build-Depends: debhelper (>= 7.0.50~), dh-autoreconf, libnfc-dev (>= 1.7.0), pkg-config
+Build-Depends: debhelper (>=7.0.50~), dh-autoreconf, libnfc-dev (>= 1.7.0~rc1), pkg-config
 Standards-Version: 3.9.2
 Homepage: http://code.google.com/p/nfc-tools/wiki/mfoc
 Vcs-Svn: http://nfc-tools.googlecode.com/svn/trunk/mfoc
