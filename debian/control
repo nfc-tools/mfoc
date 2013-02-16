@@ -12,6 +12,6 @@ Package: mfoc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: MIFARE Classic offline cracker
- This package includes the mfoc program which cracks the
- encryption keys of the MIFARE Classic chip and dumps the
- chip's memory contents to a file.
+ MFOC is an open source implementation of "offline nested" attack. It
+ helps to recove keys from MIFARE Classic tags and dump content to a
+ file.
