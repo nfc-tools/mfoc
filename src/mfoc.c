@@ -277,9 +277,12 @@ int main(int argc, char *const argv[])
       if (trailer_block(block)) {
         if (!t.sectors[i].foundKeyA) {
           mc = MC_AUTH_A;
-          if (!nfc_initiator_mifare_cmd(r.pdi, mc, block, &mp)) {
-            // fprintf(stdout, "!!Error: AUTH [Key A:%012llx] sector %02x t_block %02x\n",
-            // 	bytes_to_num(mp.mpa.abtKey, 6), i, block);
+          int res;
+          if ((res = nfc_initiator_mifare_cmd(r.pdi, mc, block, &mp)) < 0) {
+            if (res != NFC_EMFCAUTHFAIL) {
+              nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+              goto error;
+            }
             mf_anticollision(t, r);
           } else {
             // Save all information about successfull keyA authentization
@@ -289,9 +292,12 @@ int main(int argc, char *const argv[])
         }
         if (!t.sectors[i].foundKeyB) {
           mc = MC_AUTH_B;
-          if (!nfc_initiator_mifare_cmd(r.pdi, mc, block, &mp)) {
-            // fprintf(stdout, "!!Error: AUTH [Key B:%012llx] sector %02x t_block %02x\n",
-            //	bytes_to_num(mp.mpa.abtKey, 6), i, block);
+          int res;
+          if ((res = nfc_initiator_mifare_cmd(r.pdi, mc, block, &mp)) < 0) {
+            if (res != NFC_EMFCAUTHFAIL) {
+              nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+              goto error;
+            }
             mf_anticollision(t, r);
             // No success, try next block
             t.sectors[i].trailer = block;
@@ -310,8 +316,6 @@ int main(int argc, char *const argv[])
           fprintf(stdout, ".");
         }
         fflush(stdout);
-        // fprintf(stdout, "\nSuccess: AUTH [Key %c:%012llx] sector %02x t_block %02x\n",
-        // 	(mc == MC_AUTH_A ? 'A' :'B'), bytes_to_num(mp.mpa.abtKey, 6), i, block);
         // Save position of a trailer block to sector struct
         t.sectors[i++].trailer = block;
       }
@@ -343,9 +347,12 @@ int main(int argc, char *const argv[])
         for (uint32_t o = 0; o < bk->size; o++) {
           num_to_bytes(bk->brokenKeys[o], 6, mp.mpa.abtKey);
           mc = dumpKeysA ? MC_AUTH_A : MC_AUTH_B;
-          if (!nfc_initiator_mifare_cmd(r.pdi, mc, t.sectors[j].trailer, &mp)) {
-            //	fprintf(stdout, "!!Error: AUTH [Key A:%012llx] sector %02x t_block %02x, key %d\n",
-            //			bytes_to_num(mp.mpa.abtKey, 6), j, t.sectors[j].trailer, o);
+          int res;
+          if ((res = nfc_initiator_mifare_cmd(r.pdi, mc, t.sectors[j].trailer, &mp)) < 0) {
+            if (res != NFC_EMFCAUTHFAIL) {
+              nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+              goto error;
+            }
             mf_anticollision(t, r);
           } else {
             // Save all information about successfull authentization
@@ -398,9 +405,12 @@ int main(int argc, char *const argv[])
               // Set required authetication method
               num_to_bytes(ck[i].key, 6, mp.mpa.abtKey);
               mc = dumpKeysA ? MC_AUTH_A : MC_AUTH_B;
-              if (!nfc_initiator_mifare_cmd(r.pdi, mc, t.sectors[j].trailer, &mp)) {
-                // fprintf(stdout, "!!Error: AUTH [Key A:%llx] sector %02x t_block %02x\n",
-                // 	bytes_to_num(mp.mpa.abtKey, 6), j, t.sectors[j].trailer);
+              int res;
+              if ((res = nfc_initiator_mifare_cmd(r.pdi, mc, t.sectors[j].trailer, &mp)) < 0) {
+                if (res != NFC_EMFCAUTHFAIL) {
+                  nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+                  goto error;
+                 }
                 mf_anticollision(t, r);
               } else {
                 // Save all information about successfull authentization
@@ -457,12 +467,16 @@ int main(int argc, char *const argv[])
 
       // Try A key, auth() + read()
       memcpy(mp.mpa.abtKey, t.sectors[i].KeyA, sizeof(t.sectors[i].KeyA));
-      if (!nfc_initiator_mifare_cmd(r.pdi, MC_AUTH_A, block, &mp)) {
-        // ERR ("Error: Auth A");
+      int res;
+      if ((res = nfc_initiator_mifare_cmd(r.pdi, MC_AUTH_A, block, &mp)) < 0) {
+        if (res != NFC_EMFCAUTHFAIL) {
+          nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+          goto error;
+        }
         mf_configure(r.pdi);
         mf_anticollision(t, r);
       } else { // and Read
-        if (nfc_initiator_mifare_cmd(r.pdi, MC_READ, block, &mp)) {
+        if ((res = nfc_initiator_mifare_cmd(r.pdi, MC_READ, block, &mp)) >= 0) {
           fprintf(stdout, "Block %02d, type %c, key %012llx :", block, 'A', bytes_to_num(t.sectors[i].KeyA, 6));
           print_hex(mp.mpd.abtData, 16);
           mf_configure(r.pdi);
@@ -470,22 +484,32 @@ int main(int argc, char *const argv[])
           failure = false;
         } else {
           // Error, now try read() with B key
-          // ERR ("Error: Read A");
+          if (res != NFC_ERFTRANS) {
+            nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+            goto error;
+          }
           mf_configure(r.pdi);
           mf_anticollision(t, r);
           memcpy(mp.mpa.abtKey, t.sectors[i].KeyB, sizeof(t.sectors[i].KeyB));
-          if (!nfc_initiator_mifare_cmd(r.pdi, MC_AUTH_B, block, &mp)) {
-            // ERR ("Error: Auth B");
+          if ((res = nfc_initiator_mifare_cmd(r.pdi, MC_AUTH_B, block, &mp)) < 0) {
+            if (res != NFC_EMFCAUTHFAIL) {
+              nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+              goto error;
+            }
             mf_configure(r.pdi);
             mf_anticollision(t, r);
           } else { // and Read
-            if (nfc_initiator_mifare_cmd(r.pdi, MC_READ, block, &mp)) {
+            if ((res = nfc_initiator_mifare_cmd(r.pdi, MC_READ, block, &mp)) >= 0) {
               fprintf(stdout, "Block %02d, type %c, key %012llx :", block, 'B', bytes_to_num(t.sectors[i].KeyB, 6));
               print_hex(mp.mpd.abtData, 16);
               mf_configure(r.pdi);
               mf_select_tag(r.pdi, &(t.nt));
               failure = false;
             } else {
+              if (res != NFC_ERFTRANS) {
+                nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+                goto error;
+              }
               mf_configure(r.pdi);
               mf_anticollision(t, r);
               // ERR ("Error: Read B");

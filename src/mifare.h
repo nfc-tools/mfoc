@@ -3,7 +3,7 @@
  *
  * Copyright (C) 2009 Roel Verdult
  * Copyright (C) 2010 Romain Tartière
- * Copyright (C) 2010, 2011 Romuald Conty
+ * Copyright (C) 2010, 2011, 2013 Romuald Conty
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -35,12 +35,12 @@
  */
 
 #ifndef _LIBNFC_MIFARE_H_
-#  define _LIBNFC_MIFARE_H_
+#define _LIBNFC_MIFARE_H_
 
-#  include <nfc/nfc-types.h>
+#include <nfc/nfc-types.h>
 
 // Compiler directive, set struct alignment to 1 uint8_t for compatibility
-#  pragma pack(1)
+#pragma pack(1)
 
 typedef enum {
   MC_AUTH_A = 0x60,
@@ -76,7 +76,7 @@ typedef union {
 // Reset struct alignment to default
 #  pragma pack()
 
-bool    nfc_initiator_mifare_cmd(nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param *pmp);
+int    nfc_initiator_mifare_cmd(nfc_device *pnd, const mifare_cmd mc, const uint8_t ui8Block, mifare_param *pmp);
 
 // Compiler directive, set struct alignment to 1 uint8_t for compatibility
 #  pragma pack(1)
