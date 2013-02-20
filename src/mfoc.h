@@ -36,36 +36,36 @@ typedef struct {
   uint32_t       median;
   uint32_t       num_distances;
   uint32_t       tolerance;
-  uint8_t          parity[3];              // used for 3 bits of parity information
+  uint8_t        parity[3];              // used for 3 bits of parity information
 } denonce;                                      // Revealed information about nonce
 
 typedef struct {
-  nfc_target	nt;
+  nfc_target	 nt;
   sector         *sectors;                // Allocate later, we do not know the number of sectors yet
-  sector		e_sector;		// Exploit sector
+  sector         e_sector;		// Exploit sector
   uint8_t        num_sectors;
   uint8_t        num_blocks;
-  uint32_t        authuid;
-  bool            b4K;
+  uint32_t       authuid;
+  bool           b4K;
 } mftag;
 
 typedef struct {
-  uint64_t        *possibleKeys;
-  uint32_t        size;
+  uint64_t       *possibleKeys;
+  uint32_t       size;
 } pKeys;
 
 typedef struct {
-  uint64_t        *brokenKeys;
-  uint32_t         size;
+  uint64_t       *brokenKeys;
+  uint32_t       size;
 } bKeys;
 
 typedef struct {
-  nfc_device    *pdi;
+  nfc_device     *pdi;
 } mfreader;
 
 typedef struct {
-  uint64_t        key;
-  int             count;
+  uint64_t       key;
+  int            count;
 } countKeys;
 
 
