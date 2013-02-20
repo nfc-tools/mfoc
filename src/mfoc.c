@@ -676,7 +676,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 
   uint32_t Nt, NtLast, NtProbe, NtEnc, Ks1;
 
-  int i, m;
+  int i;
+  uint32_t m;
 
   // Prepare AUTH command
   Auth[0] = (t.sectors[e_sector].foundKeyA) ? MC_AUTH_A : MC_AUTH_B;

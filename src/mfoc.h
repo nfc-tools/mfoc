@@ -56,7 +56,7 @@ typedef struct {
 
 typedef struct {
   uint64_t        *brokenKeys;
-  int32_t         size;
+  uint32_t         size;
 } bKeys;
 
 typedef struct {
