@@ -1,34 +1,36 @@
+/*-
+ * Mifare Classic Offline Cracker
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ * Contact: <mifare@nethemba.com>
+ *
+ * Porting to libnfc 1.3.3: Michal Boska <boska.michal@gmail.com>
+ * Porting to libnfc 1.3.9 and upper: Romuald Conty <romuald@libnfc.org>
+ *
+ */
+
 /*
-
- Mifare Classic Offline Cracker
-
- Requirements: crapto1 library http://code.google.com/p/crapto1
- libnfc                        http://www.libnfc.org
-
- This program is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 2 of the License, or
- (at your option) any later version.
-
- This program is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
- Contact: <mifare@nethemba.com>
-
- Porting to libnfc 1.3.3: Michal Boska <boska.michal@gmail.com>
- Porting to libnfc 1.3.9: Romuald Conty <romuald@libnfc.org>
- Porting to libnfc 1.4.x: Romuald Conty <romuald@libnfc.org>
-
- URL http://eprint.iacr.org/2009/137.pdf
- URL http://www.sos.cs.ru.nl/applications/rfid/2008-esorics.pdf
- URL http://www.cosic.esat.kuleuven.be/rfidsec09/Papers/mifare_courtois_rfidsec09.pdf
- URL http://www.cs.ru.nl/~petervr/papers/grvw_2009_pickpocket.pdf
-*/
+ * This implementation was written based on information provided by the
+ * following documents:
+ *
+ * http://eprint.iacr.org/2009/137.pdf
+ * http://www.sos.cs.ru.nl/applications/rfid/2008-esorics.pdf
+ * http://www.cosic.esat.kuleuven.be/rfidsec09/Papers/mifare_courtois_rfidsec09.pdf
+ * http://www.cs.ru.nl/~petervr/papers/grvw_2009_pickpocket.pdf
+ */
 
 #define _XOPEN_SOURCE 1 // To enable getopt
 
