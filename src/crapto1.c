@@ -311,7 +311,6 @@ continue2:
 
 uint8_t lfsr_rollback_bit(struct Crypto1State *s, uint32_t in, int fb);
 uint8_t lfsr_rollback_byte(struct Crypto1State *s, uint32_t in, int fb);
-uint32_t lfsr_rollback_word(struct Crypto1State *s, uint32_t in, int fb);
 uint32_t *lfsr_prefix_ks(uint8_t ks[8], int isodd);
 
 /** lfsr_rollback_bit
