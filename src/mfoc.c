@@ -251,7 +251,8 @@ int main(int argc, char *const argv[])
 
   print_nfc_target(t.nt, true);
 
-  // Try to authenticate to all sectors with default keys
+  fprintf(stdout, "\nTry to authenticate to all sectors with default keys...\n");
+  fprintf(stdout, "Symbols: '.' no key found, '/' A key found, '\\' B key found, 'x' both keys found\n");
   // Set the authentication information (uid)
   memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
   // Iterate over all keys (n = number of keys)
