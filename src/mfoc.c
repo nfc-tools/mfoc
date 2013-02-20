@@ -5,12 +5,12 @@
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
@@ -280,7 +280,7 @@ int main(int argc, char *const argv[])
           int res;
           if ((res = nfc_initiator_mifare_cmd(r.pdi, mc, block, &mp)) < 0) {
             if (res != NFC_EMFCAUTHFAIL) {
-              nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+              nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
               goto error;
             }
             mf_anticollision(t, r);
@@ -295,7 +295,7 @@ int main(int argc, char *const argv[])
           int res;
           if ((res = nfc_initiator_mifare_cmd(r.pdi, mc, block, &mp)) < 0) {
             if (res != NFC_EMFCAUTHFAIL) {
-              nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+              nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
               goto error;
             }
             mf_anticollision(t, r);
@@ -350,7 +350,7 @@ int main(int argc, char *const argv[])
           int res;
           if ((res = nfc_initiator_mifare_cmd(r.pdi, mc, t.sectors[j].trailer, &mp)) < 0) {
             if (res != NFC_EMFCAUTHFAIL) {
-              nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+              nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
               goto error;
             }
             mf_anticollision(t, r);
@@ -408,9 +408,9 @@ int main(int argc, char *const argv[])
               int res;
               if ((res = nfc_initiator_mifare_cmd(r.pdi, mc, t.sectors[j].trailer, &mp)) < 0) {
                 if (res != NFC_EMFCAUTHFAIL) {
-                  nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+                  nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
                   goto error;
-                 }
+                }
                 mf_anticollision(t, r);
               } else {
                 // Save all information about successfull authentization
@@ -470,7 +470,7 @@ int main(int argc, char *const argv[])
       int res;
       if ((res = nfc_initiator_mifare_cmd(r.pdi, MC_AUTH_A, block, &mp)) < 0) {
         if (res != NFC_EMFCAUTHFAIL) {
-          nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+          nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
           goto error;
         }
         mf_configure(r.pdi);
@@ -485,7 +485,7 @@ int main(int argc, char *const argv[])
         } else {
           // Error, now try read() with B key
           if (res != NFC_ERFTRANS) {
-            nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+            nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
             goto error;
           }
           mf_configure(r.pdi);
@@ -493,7 +493,7 @@ int main(int argc, char *const argv[])
           memcpy(mp.mpa.abtKey, t.sectors[i].KeyB, sizeof(t.sectors[i].KeyB));
           if ((res = nfc_initiator_mifare_cmd(r.pdi, MC_AUTH_B, block, &mp)) < 0) {
             if (res != NFC_EMFCAUTHFAIL) {
-              nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+              nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
               goto error;
             }
             mf_configure(r.pdi);
@@ -507,7 +507,7 @@ int main(int argc, char *const argv[])
               failure = false;
             } else {
               if (res != NFC_ERFTRANS) {
-                nfc_perror (r.pdi, "nfc_initiator_mifare_cmd");
+                nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
                 goto error;
               }
               mf_configure(r.pdi);
