@@ -340,7 +340,7 @@ int main(int argc, char *const argv[])
         skip = false;
         for (uint32_t o = 0; o < bk->size; o++) {
           num_to_bytes(bk->brokenKeys[o], 6, mp.mpa.abtKey);
-          mc = dumpKeysA ? 0x60 : 0x61;
+          mc = dumpKeysA ? MC_AUTH_A : MC_AUTH_B;
           if (!nfc_initiator_mifare_cmd(r.pdi, mc, t.sectors[j].trailer, &mp)) {
             //	fprintf(stdout, "!!Error: AUTH [Key A:%012llx] sector %02x t_block %02x, key %d\n",
             //			bytes_to_num(mp.mpa.abtKey, 6), j, t.sectors[j].trailer, o);
@@ -395,7 +395,7 @@ int main(int argc, char *const argv[])
               // fprintf(stdout,"%d %llx\n",ck[i].count, ck[i].key);
               // Set required authetication method
               num_to_bytes(ck[i].key, 6, mp.mpa.abtKey);
-              mc = dumpKeysA ? 0x60 : 0x61;
+              mc = dumpKeysA ? MC_AUTH_A : MC_AUTH_B;
               if (!nfc_initiator_mifare_cmd(r.pdi, mc, t.sectors[j].trailer, &mp)) {
                 // fprintf(stdout, "!!Error: AUTH [Key A:%llx] sector %02x t_block %02x\n",
                 // 	bytes_to_num(mp.mpa.abtKey, 6), j, t.sectors[j].trailer);
@@ -679,7 +679,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
   int i, m;
 
   // Prepare AUTH command
-  Auth[0] = (t.sectors[e_sector].foundKeyA) ? 0x60 : 0x61;
+  Auth[0] = (t.sectors[e_sector].foundKeyA) ? MC_AUTH_A : MC_AUTH_B;
   iso14443a_crc_append(Auth, 2);
   // fprintf(stdout, "\nAuth command:\t");
   // print_hex(Auth, 4);
@@ -825,7 +825,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
   // If we are in "Get Recovery" mode
   if (mode == 'r') {
     // Again, prepare the Auth command with MC_AUTH_A, recover the block and CRC
-    Auth[0] = dumpKeysA ? 0x60 : 0x61;
+    Auth[0] = dumpKeysA ? MC_AUTH_A : MC_AUTH_B;
     Auth[1] = a_sector;
     iso14443a_crc_append(Auth, 2);
 
