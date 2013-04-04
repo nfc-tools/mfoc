@@ -82,8 +82,6 @@ int main(int argc, char *const argv[])
   // Array with default Mifare Classic keys
   uint8_t defaultKeys[][6] = {
     {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // Default key (first key used by program if no user defined key)
-    {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
-    {0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // Blank key
     {0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5},
     {0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd},
@@ -251,7 +249,7 @@ int main(int argc, char *const argv[])
     t.sectors[s].foundKeyA = t.sectors[s].foundKeyB = false;
   }
 
-  print_nfc_target(t.nt, true);
+  print_nfc_target(&t.nt, true);
 
   fprintf(stdout, "\nTry to authenticate to all sectors with default keys...\n");
   fprintf(stdout, "Symbols: '.' no key found, '/' A key found, '\\' B key found, 'x' both keys found\n");

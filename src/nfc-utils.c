@@ -1,9 +1,13 @@
 /*-
- * Public platform independent Near Field Communication (NFC) library examples
+ * Free/Libre Near Field Communication (NFC) library
  *
- * Copyright (C) 2009 Roel Verdult
- * Copyright (C) 2010, 2011 Romain Tartière
- * Copyright (C) 2009, 2010, 2011, 2012 Romuald Conty
+ * Libnfc historical contributors:
+ * Copyright (C) 2009      Roel Verdult
+ * Copyright (C) 2009-2013 Romuald Conty
+ * Copyright (C) 2010-2012 Romain Tartière
+ * Copyright (C) 2010-2013 Philippe Teuwen
+ * Copyright (C) 2012-2013 Ludovic Rousseau
+ * Additional contributors of this file:
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -115,10 +119,10 @@ print_hex_par(const uint8_t *pbtData, const size_t szBits, const uint8_t *pbtDat
 }
 
 void
-print_nfc_target(const nfc_target nt, bool verbose)
+print_nfc_target(const nfc_target *pnt, bool verbose)
 {
   char *s;
-  str_nfc_target(&s, nt, verbose);
+  str_nfc_target(&s, pnt, verbose);
   printf("%s", s);
-  free(s);
+  nfc_free(s);
 }
