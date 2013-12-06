@@ -204,9 +204,12 @@ int main(int argc, char *const argv[])
   	for (i=0;!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) && i < 10; i++) zsleep (100);
   */
 
-  // mf_select_tag(r.pdi, &(t.nt));
-  if (nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) < 0) {
+  int tag_count;
+  if ((tag_count = nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt)) < 0) {
     nfc_perror(r.pdi, "nfc_initiator_select_passive_target");
+    goto error;
+  } else if (tag_count == 0) {
+    ERR("No tag found.");
     goto error;
   }
 
