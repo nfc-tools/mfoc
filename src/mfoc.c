@@ -582,6 +582,10 @@ void mf_init(mfreader *r)
 {
   // Connect to the first NFC device
   nfc_init(&context);
+  if (context == NULL) {
+    ERR("Unable to init libnfc (malloc)");
+    exit(EXIT_FAILURE);
+  }
   r->pdi = nfc_open(context, NULL);
   if (!r->pdi) {
     printf("No NFC device found.\n");
