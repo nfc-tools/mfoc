@@ -2,10 +2,20 @@
 #define TRY_KEYS                50
 
 // Number of trailers == number of sectors
-// 16x64b = 16
+// Mifare Classic 1k 16x64b = 16
 #define NR_TRAILERS_1k  (16)
-// 32x64b + 8*256b = 40
+// Mifare Classic Mini
+#define NR_TRAILERS_MINI (5)
+// Mifare Classic 4k 32x64b + 8*256b = 40
 #define NR_TRAILERS_4k  (40)
+
+// Number of blocks
+// Mifare Classic 1k
+#define NR_BLOCKS_1k 0x3f
+// Mifare Classic Mini
+#define NR_BLOCKS_MINI 0x13
+// Mifare Classic 4k
+#define NR_BLOCKS_4k 0xff
 
 #define MAX_FRAME_LEN 264
 
@@ -46,7 +56,6 @@ typedef struct {
   uint8_t        num_sectors;
   uint8_t        num_blocks;
   uint32_t       authuid;
-  bool           b4K;
 } mftag;
 
 typedef struct {

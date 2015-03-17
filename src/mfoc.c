@@ -219,12 +219,31 @@ int main(int argc, char *const argv[])
     goto error;
   }
 
-  // Save tag's block size (b4K)
-  t.b4K = (t.nt.nti.nai.abtAtqa[1] == 0x02);
   t.authuid = (uint32_t) bytes_to_num(t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, 4);
 
-  t.num_blocks = (t.b4K) ? 0xff : 0x3f;
-  t.num_sectors = t.b4K ? NR_TRAILERS_4k : NR_TRAILERS_1k;
+  // Get Mifare Classic type from SAK
+  // see http://www.nxp.com/documents/application_note/AN10833.pdf Section 3.2
+  switch (t.nt.nti.nai.btSak)
+  {
+    case 0x08:
+      printf("Found Mifare Classic 1k tag\n");
+      t.num_sectors = NR_TRAILERS_1k;
+      t.num_blocks = NR_BLOCKS_1k;
+      break;
+    case 0x09:
+      printf("Found Mifare Classic Mini tag\n");
+      t.num_sectors = NR_TRAILERS_MINI;
+      t.num_blocks = NR_BLOCKS_MINI;
+      break;
+    case 0x18:
+      printf("Found Mifare Classic 4k tag\n");
+      t.num_sectors = NR_TRAILERS_4k;
+      t.num_blocks = NR_BLOCKS_4k;
+      break;
+    defaul:
+      ERR("Cannot determine card type from SAK");
+      goto error;
+  }
 
   t.sectors = (void *) calloc(t.num_sectors, sizeof(sector));
   if (t.sectors == NULL) {
