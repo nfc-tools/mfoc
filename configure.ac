@@ -2,13 +2,13 @@ AC_INIT([mfoc],[0.10.7],[mifare@nethemba.com])
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_PROG_CC
-
 AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_SRCDIR([src/mfoc.c])
 
 AM_INIT_AUTOMAKE(dist-bzip2 no-dist-gzip)
+
+AC_PROG_CC
 
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 

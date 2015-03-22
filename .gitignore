@@ -8,6 +8,7 @@ config.h.in
 config.log
 config.status
 configure
+compile
 depcomp
 install-sh
 missing
@@ -17,5 +18,6 @@ src/.deps/
 src/Makefile
 src/Makefile.in
 src/mfoc
+src/mfoc.exe
 stamp-h1
 
