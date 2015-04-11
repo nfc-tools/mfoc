@@ -241,7 +241,7 @@ int main(int argc, char *const argv[])
       t.num_sectors = NR_TRAILERS_4k;
       t.num_blocks = NR_BLOCKS_4k;
       break;
-    defaul:
+    default:
       ERR("Cannot determine card type from SAK");
       goto error;
   }
