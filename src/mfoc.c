@@ -284,7 +284,7 @@ int main(int argc, char *const argv[])
   n = sizeof(defaultKeys) / sizeof(defaultKeys[0]);
   size_t defKey_bytes_todo = defKeys_len;
   key = 0;
-  while (key < n) {
+  while (key < n || defKey_bytes_todo) {
     if (defKey_bytes_todo > 0) {
       memcpy(mp.mpa.abtKey, defKeys + defKeys_len - defKey_bytes_todo, sizeof(mp.mpa.abtKey));
       defKey_bytes_todo -= sizeof(mp.mpa.abtKey);
