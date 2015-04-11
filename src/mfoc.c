@@ -633,7 +633,8 @@ int main(int argc, char *const argv[])
     }
 
     // Finally save all keys + data to file
-    if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
+    uint16_t dump_size = (t.num_blocks + 1) * t.num_sectors;
+    if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
       fprintf(stdout, "Error, cannot write dump\n");
       fclose(pfDump);
       goto error;
