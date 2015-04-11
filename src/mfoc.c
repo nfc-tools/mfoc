@@ -226,6 +226,7 @@ int main(int argc, char *const argv[])
   switch (t.nt.nti.nai.btSak)
   {
     case 0x08:
+    case 0x88:
       printf("Found Mifare Classic 1k tag\n");
       t.num_sectors = NR_TRAILERS_1k;
       t.num_blocks = NR_BLOCKS_1k;
