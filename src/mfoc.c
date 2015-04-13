@@ -226,6 +226,7 @@ int main(int argc, char *const argv[])
   switch (t.nt.nti.nai.btSak)
   {
     case 0x08:
+    case 0x88:
       printf("Found Mifare Classic 1k tag\n");
       t.num_sectors = NR_TRAILERS_1k;
       t.num_blocks = NR_BLOCKS_1k;
@@ -240,7 +241,7 @@ int main(int argc, char *const argv[])
       t.num_sectors = NR_TRAILERS_4k;
       t.num_blocks = NR_BLOCKS_4k;
       break;
-    defaul:
+    default:
       ERR("Cannot determine card type from SAK");
       goto error;
   }
@@ -283,7 +284,7 @@ int main(int argc, char *const argv[])
   n = sizeof(defaultKeys) / sizeof(defaultKeys[0]);
   size_t defKey_bytes_todo = defKeys_len;
   key = 0;
-  while (key < n) {
+  while (key < n || defKey_bytes_todo) {
     if (defKey_bytes_todo > 0) {
       memcpy(mp.mpa.abtKey, defKeys + defKeys_len - defKey_bytes_todo, sizeof(mp.mpa.abtKey));
       defKey_bytes_todo -= sizeof(mp.mpa.abtKey);
@@ -632,7 +633,8 @@ int main(int argc, char *const argv[])
     }
 
     // Finally save all keys + data to file
-    if (fwrite(&mtDump, 1, sizeof(mtDump), pfDump) != sizeof(mtDump)) {
+    uint16_t dump_size = (t.num_blocks + 1) * t.num_sectors;
+    if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
       fprintf(stdout, "Error, cannot write dump\n");
       fclose(pfDump);
       goto error;
