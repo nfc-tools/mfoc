@@ -52,6 +52,10 @@
 #include "nfc-utils.h"
 #include "mfoc.h"
 
+//SLRE 
+#include "slre.h"
+#include "slre.c"
+
 nfc_context *context;
 
 int main(int argc, char *const argv[])
