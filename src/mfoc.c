@@ -125,7 +125,7 @@ int main(int argc, char *const argv[])
   ssize_t read;
   
   //Regexp declarations
-  static const char *regex = "(?i)([0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F])";
+  static const char *regex = "([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
   struct slre_cap caps[2];  
 
   // Parse command line arguments
@@ -159,7 +159,7 @@ int main(int argc, char *const argv[])
             int i, j = 0, str_len = strlen(line);
 
             while (j < str_len &&
-                   (i = slre_match(regex, line + j, str_len - j, caps, 2, 0)) > 0) {
+                   (i = slre_match(regex, line + j, str_len - j, caps, 500, 1)) > 0) {
                 //We've found a key, let's add it to the structure.
                 p = realloc(defKeys, defKeys_len + 6);
                 if (!p) {
