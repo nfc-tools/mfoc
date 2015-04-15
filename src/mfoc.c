@@ -97,22 +97,32 @@ int main(int argc, char *const argv[])
 
   };
 
-  mftag		t;
-  mfreader	r;
-  denonce		d = {NULL, 0, DEFAULT_DIST_NR, DEFAULT_TOLERANCE, {0x00, 0x00, 0x00}};
+  mftag        t;
+  mfreader    r;
+  denonce        d = {NULL, 0, DEFAULT_DIST_NR, DEFAULT_TOLERANCE, {0x00, 0x00, 0x00}};
 
   // Pointers to possible keys
-  pKeys		*pk;
-  countKeys	*ck;
+  pKeys        *pk;
+  countKeys    *ck;
 
   // Pointer to already broken keys, except defaults
-  bKeys		*bk;
+  bKeys        *bk;
 
   static mifare_param mp, mtmp;
   static mifare_classic_tag mtDump;
 
   mifare_cmd mc;
   FILE *pfDump = NULL;
+  
+  //File pointers for the keyfile 
+  FILE * fp;
+  char * line = NULL;
+  size_t len = 0;
+  ssize_t read;
+  
+  //Regexp declarations
+  static const char *regex = "(?i)([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
+  struct slre_cap caps[2];  
 
   // Parse command line arguments
   while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:t:")) != -1) {
@@ -136,6 +146,34 @@ int main(int argc, char *const argv[])
         // fprintf(stdout, "Tolerance number: %d\n", probes);
       }
       break;
+    case 'f':
+    if (!(fp = fopen(optarg, "r"))) {
+                fprintf(stderr, "Cannot open keyfile: %s, exiting\n", optarg);
+                exit(EXIT_FAILURE);
+    }
+        while ((read = getline(&line, &len, fp)) != -1) {
+            int i, j = 0, str_len = strlen(line);
+
+            while (j < str_len &&
+                   (i = slre_match(regex, line + j, str_len - j, caps, 2)) > 0) {
+                //We've found a key, let's add it to the structure.
+                p = realloc(defKeys, defKeys_len + 6);
+                if (!p) {
+                  ERR("Cannot allocate memory for defKeys");
+                  exit(EXIT_FAILURE);
+                }                
+                defKeys = p;
+                memset(defKeys + defKeys_len, 0, 6);
+                num_to_bytes(strtoll(caps[0].ptr, NULL, 16), 6, defKeys + defKeys_len);
+                fprintf(stdout, "The custom key 0x%.*s has been added to the default keys\n", caps[0].len, caps[0].ptr);
+                defKeys_len = defKeys_len + 6;
+                
+              j += i;
+            }
+        }
+        if (line)
+            free(line);
+      break;      
       case 'k':
         // Add this key to the default keys
         p = realloc(defKeys, defKeys_len + 6);
@@ -200,8 +238,8 @@ int main(int argc, char *const argv[])
   }
 
   /*
-  	// wait for tag to appear
-  	for (i=0;!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) && i < 10; i++) zsleep (100);
+      // wait for tag to appear
+      for (i=0;!nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) && i < 10; i++) zsleep (100);
   */
 
   int tag_count;
@@ -661,20 +699,22 @@ error:
 
 void usage(FILE *stream, int errno)
 {
-  fprintf(stream, "Usage: mfoc [-h] [-k key]... [-P probnum] [-T tolerance] [-O output]\n");
+  fprintf(stream, "Usage: mfoc [-h] [-k key] [-f file] ... [-P probnum] [-T tolerance] [-O output]\n");
   fprintf(stream, "\n");
   fprintf(stream, "  h     print this help and exit\n");
-//	fprintf(stream, "  B     instead of 'A' dump 'B' keys\n");
+//    fprintf(stream, "  B     instead of 'A' dump 'B' keys\n");
   fprintf(stream, "  k     try the specified key in addition to the default keys\n");
-//	fprintf(stream, "  D     number of distance probes, default is 20\n");
-//	fprintf(stream, "  S     number of sets with keystreams, default is 5\n");
+  fprintf(stream, "  f     parses a file of keys to add in addition to the default keys \n");    
+//    fprintf(stream, "  D     number of distance probes, default is 20\n");
+//    fprintf(stream, "  S     number of sets with keystreams, default is 5\n");
   fprintf(stream, "  P     number of probes per sector, instead of default of 20\n");
   fprintf(stream, "  T     nonce tolerance half-range, instead of default of 20\n        (i.e., 40 for the total range, in both directions)\n");
-//	fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
+//    fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
   fprintf(stream, "  O     file in which the card contents will be written (REQUIRED)\n");
   fprintf(stream, "\n");
   fprintf(stream, "Example: mfoc -O mycard.mfd\n");
   fprintf(stream, "Example: mfoc -k ffffeeeedddd -O mycard.mfd\n");
+  fprintf(stream, "Example: mfoc -f keys.txt -O mycard.mfd\n");
   fprintf(stream, "Example: mfoc -P 50 -T 30 -O mycard.mfd\n");
   fprintf(stream, "\n");
   fprintf(stream, "This is mfoc version %s.\n", PACKAGE_VERSION);
