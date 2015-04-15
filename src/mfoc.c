@@ -129,7 +129,7 @@ int main(int argc, char *const argv[])
   struct slre_cap caps[2];  
 
   // Parse command line arguments
-  while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:t:")) != -1) {
+  while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:t:f:")) != -1) {
     switch (ch) {
       case 'P':
         // Number of probes
