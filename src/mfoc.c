@@ -336,6 +336,8 @@ int main(int argc, char *const argv[])
     i = 0; // Sector counter
     // Iterate over every block, where we haven't found a key yet
     for (block = 0; block <= t.num_blocks; ++block) {
+    	bool rightKeyA=false;
+    	bool rightKeyB=false;
       if (trailer_block(block)) {
         if (!t.sectors[i].foundKeyA) {
           mc = MC_AUTH_A;
@@ -350,6 +352,7 @@ int main(int argc, char *const argv[])
             // Save all information about successfull keyA authentization
             memcpy(t.sectors[i].KeyA, mp.mpa.abtKey, sizeof(mp.mpa.abtKey));
             t.sectors[i].foundKeyA = true;
+            rightKeyA=true;
             // Although KeyA can never be directly read from the data sector, KeyB can, so
             // if we need KeyB for this sector, it should be revealed by a data read with KeyA
             // todo - check for duplicates in cracked key list (do we care? will not be huge overhead)
@@ -397,13 +400,14 @@ int main(int argc, char *const argv[])
           } else {
             memcpy(t.sectors[i].KeyB, mp.mpa.abtKey, sizeof(mp.mpa.abtKey));
             t.sectors[i].foundKeyB = true;
+            rightKeyB=true;
           }
         }
-        if ((t.sectors[i].foundKeyA) && (t.sectors[i].foundKeyB)) {
+        if ( rightKeyA && rightKeyB) {
           fprintf(stdout, "x");
-        } else if (t.sectors[i].foundKeyA) {
+        } else if ( rightKeyA ) {
           fprintf(stdout, "/");
-        } else if (t.sectors[i].foundKeyB) {
+        } else if ( rightKeyB) {
           fprintf(stdout, "\\");
         } else {
           fprintf(stdout, ".");
@@ -603,11 +607,10 @@ int main(int argc, char *const argv[])
   }
 
   if (succeed) {
-    i = t.num_sectors; // Sector counter
+    i = 0; // Sector counter
     fprintf(stdout, "Auth with all sectors succeeded, dumping keys to a file!\n");
     // Read all blocks
-    for (block = t.num_blocks; block >= 0; block--) {
-      trailer_block(block) ? i-- : i;
+    for (block = 0; block <= t.num_blocks; block++) {
       failure = true;
 
       // Try A key, auth() + read()
@@ -666,7 +669,10 @@ int main(int argc, char *const argv[])
         // Copy the keys over from our key dump and store the retrieved access bits
         memcpy(mtDump.amb[block].mbt.abtKeyA, t.sectors[i].KeyA, 6);
         memcpy(mtDump.amb[block].mbt.abtKeyB, t.sectors[i].KeyB, 6);
-        if (!failure) memcpy(mtDump.amb[block].mbt.abtAccessBits, mp.mpd.abtData + 6, 4);
+        if (!failure) {
+        	memcpy(mtDump.amb[block].mbt.abtAccessBits, mp.mpd.abtData + 6, 4);
+        }
+        i++;
       } else if (!failure) memcpy(mtDump.amb[block].mbd.abtData, mp.mpd.abtData, 16);
       memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
     }
