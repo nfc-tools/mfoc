@@ -54,7 +54,6 @@
 
 //SLRE 
 #include "slre.h"
-#include "slre.c"
 
 nfc_context *context;
 
@@ -120,9 +119,7 @@ int main(int argc, char *const argv[])
   
   //File pointers for the keyfile 
   FILE * fp;
-  char * line = NULL;
-  size_t len = 0;
-  ssize_t read;
+  char  line[20];
   
   //Regexp declarations
   static const char *regex = "([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
@@ -155,7 +152,7 @@ int main(int argc, char *const argv[])
                 fprintf(stderr, "Cannot open keyfile: %s, exiting\n", optarg);
                 exit(EXIT_FAILURE);
     }
-        while ((read = getline(&line, &len, fp)) != -1) {
+        while ( fgets(line, 20, fp)) {
             int i, j = 0, str_len = strlen(line);
 
             while (j < str_len &&
