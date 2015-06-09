@@ -421,9 +421,14 @@ int main(int argc, char *const argv[])
 
   fprintf(stdout, "\n");
   for (i = 0; i < (t.num_sectors); ++i) {
-    fprintf(stdout, "Sector %02d - %12s  ", i, ((t.sectors[i].foundKeyA) ? " FOUND_KEY   [A]" : " UNKNOWN_KEY [A]"));
-    fprintf(stdout, "Sector %02d - %12s  ", i, ((t.sectors[i].foundKeyB) ? " FOUND_KEY   [B]" : " UNKNOWN_KEY [B]"));
-    fprintf(stdout, "\n");
+    if(t.sectors[i].foundKeyA)
+      fprintf(stdout, "Sector %02d - Found   Key A: %012llx ", i, bytes_to_num(t.sectors[i].KeyA, sizeof(t.sectors[i].KeyA)));
+    else
+      fprintf(stdout, "Sector %02d - Unknown Key A               ", i);
+    if(t.sectors[i].foundKeyB)
+      fprintf(stdout, "Found   Key B: %012llx\n", bytes_to_num(t.sectors[i].KeyB, sizeof(t.sectors[i].KeyB)));
+    else
+      fprintf(stdout, "Unknown Key B\n");
   }
   fflush(stdout);
 
