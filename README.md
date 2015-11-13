@@ -10,3 +10,7 @@ Lauching mfoc, you will need to pass options, see
 ```
 mfoc -h
 ```
+# Docker #
+if you are haveing trouble getting mfoc to run on your machine
+you can use this prebuild docker container  
+[RFID-forensics](https://hub.docker.com/r/note89/rfid-forensics/)
