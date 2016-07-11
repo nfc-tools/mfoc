@@ -767,7 +767,9 @@ void usage(FILE *stream, int errno)
   fprintf(stream, "  h     print this help and exit\n");
 //    fprintf(stream, "  B     instead of 'A' dump 'B' keys\n");
   fprintf(stream, "  k     try the specified key in addition to the default keys\n");
+  fprintf(stream, "  K     Like -k option but without the default keys\n");
   fprintf(stream, "  f     parses a file of keys to add in addition to the default keys \n");    
+  fprintf(stream, "  F     Like -f option but without the default keys \n");    
 //    fprintf(stream, "  D     number of distance probes, default is 20\n");
 //    fprintf(stream, "  S     number of sets with keystreams, default is 5\n");
   fprintf(stream, "  P     number of probes per sector, instead of default of 20\n");
