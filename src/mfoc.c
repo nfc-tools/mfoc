@@ -82,6 +82,7 @@ int main(int argc, char *const argv[])
   // Next default key specified as option (-k)
   uint8_t *defKeys = NULL, *p;
   size_t defKeys_len = 0;
+  bool useDefaultKey = true;
 
   // Array with default Mifare Classic keys
   uint8_t defaultKeys[][6] = {
@@ -129,7 +130,7 @@ int main(int argc, char *const argv[])
   struct slre_cap caps[2];  
 
   // Parse command line arguments
-  while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:t:f:")) != -1) {
+  while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:K:t:f:F:")) != -1) {
     switch (ch) {
       case 'P':
         // Number of probes
@@ -177,7 +178,40 @@ int main(int argc, char *const argv[])
         }
         if (line)
             free(line);
-      break;      
+      break;
+      case 'F':
+
+        if (!(fp = fopen(optarg, "r"))) {
+                fprintf(stderr, "Cannot open keyfile: %s, exiting\n", optarg);
+                exit(EXIT_FAILURE);
+        }
+        while ((read = getline(&line, &len, fp)) != -1) {
+            int i, j = 0, str_len = strlen(line);
+
+            while (j < str_len &&
+                   (i = slre_match(regex, line + j, str_len - j, caps, 500, 1)) > 0) {
+                //We've found a key, let's add it to the structure.
+                p = realloc(defKeys, defKeys_len + 6);
+                if (!p) {
+                  ERR("Cannot allocate memory for defKeys");
+                  exit(EXIT_FAILURE);
+                }                
+                defKeys = p;
+                memset(defKeys + defKeys_len, 0, 6);
+                num_to_bytes(strtoll(caps[0].ptr, NULL, 16), 6, defKeys + defKeys_len);
+                fprintf(stdout, "The custom key 0x%.*s has been added to the default keys\n", caps[0].len, caps[0].ptr);
+                defKeys_len = defKeys_len + 6;
+                
+              j += i;
+            }
+        }
+        if (line) {
+            free(line);
+        }
+
+        useDefaultKey = false;
+
+      break;     
       case 'k':
         // Add this key to the default keys
         p = realloc(defKeys, defKeys_len + 6);
@@ -190,6 +224,21 @@ int main(int argc, char *const argv[])
         num_to_bytes(strtoll(optarg, NULL, 16), 6, defKeys + defKeys_len);
         fprintf(stdout, "The custom key 0x%012llx has been added to the default keys\n", bytes_to_num(defKeys + defKeys_len, 6));
         defKeys_len = defKeys_len + 6;
+
+        break;
+      case 'K' :
+        // Add this key to the default keys
+        p = realloc(defKeys, defKeys_len + 6);
+        if (!p) {
+          ERR("Cannot allocate memory for defKeys");
+          exit(EXIT_FAILURE);
+        }
+        defKeys = p;
+        memset(defKeys + defKeys_len, 0, 6);
+        num_to_bytes(strtoll(optarg, NULL, 16), 6, defKeys + defKeys_len);
+        fprintf(stdout, "The custom key 0x%012llx has been added to the default keys\n", bytes_to_num(defKeys + defKeys_len, 6));
+        defKeys_len = defKeys_len + 6;
+        useDefaultKey = false;
 
         break;
       case 'O':
@@ -324,6 +373,11 @@ int main(int argc, char *const argv[])
   memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
   // Iterate over all keys (n = number of keys)
   n = sizeof(defaultKeys) / sizeof(defaultKeys[0]);
+  
+  if (!useDefaultKey) {
+   n -= defKeys_len; 
+  }
+
   size_t defKey_bytes_todo = defKeys_len;
   key = 0;
   while (key < n || defKey_bytes_todo) {
@@ -713,7 +767,9 @@ void usage(FILE *stream, int errno)
   fprintf(stream, "  h     print this help and exit\n");
 //    fprintf(stream, "  B     instead of 'A' dump 'B' keys\n");
   fprintf(stream, "  k     try the specified key in addition to the default keys\n");
+  fprintf(stream, "  K     Like -k option but without the default keys\n");
   fprintf(stream, "  f     parses a file of keys to add in addition to the default keys \n");    
+  fprintf(stream, "  F     Like -f option but without the default keys \n");    
 //    fprintf(stream, "  D     number of distance probes, default is 20\n");
 //    fprintf(stream, "  S     number of sets with keystreams, default is 5\n");
   fprintf(stream, "  P     number of probes per sector, instead of default of 20\n");
