@@ -130,7 +130,7 @@ int main(int argc, char *const argv[])
   struct slre_cap caps[2];  
 
   // Parse command line arguments
-  while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:K:t:f:")) != -1) {
+  while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:K:t:f:F:")) != -1) {
     switch (ch) {
       case 'P':
         // Number of probes
@@ -178,7 +178,40 @@ int main(int argc, char *const argv[])
         }
         if (line)
             free(line);
-      break;      
+      break;
+      case 'F':
+
+        if (!(fp = fopen(optarg, "r"))) {
+                fprintf(stderr, "Cannot open keyfile: %s, exiting\n", optarg);
+                exit(EXIT_FAILURE);
+        }
+        while ((read = getline(&line, &len, fp)) != -1) {
+            int i, j = 0, str_len = strlen(line);
+
+            while (j < str_len &&
+                   (i = slre_match(regex, line + j, str_len - j, caps, 500, 1)) > 0) {
+                //We've found a key, let's add it to the structure.
+                p = realloc(defKeys, defKeys_len + 6);
+                if (!p) {
+                  ERR("Cannot allocate memory for defKeys");
+                  exit(EXIT_FAILURE);
+                }                
+                defKeys = p;
+                memset(defKeys + defKeys_len, 0, 6);
+                num_to_bytes(strtoll(caps[0].ptr, NULL, 16), 6, defKeys + defKeys_len);
+                fprintf(stdout, "The custom key 0x%.*s has been added to the default keys\n", caps[0].len, caps[0].ptr);
+                defKeys_len = defKeys_len + 6;
+                
+              j += i;
+            }
+        }
+        if (line) {
+            free(line);
+        }
+
+        useDefaultKey = false;
+
+      break;     
       case 'k':
         // Add this key to the default keys
         p = realloc(defKeys, defKeys_len + 6);
@@ -342,7 +375,7 @@ int main(int argc, char *const argv[])
   n = sizeof(defaultKeys) / sizeof(defaultKeys[0]);
   
   if (!useDefaultKey) {
-   n -= 13; 
+   n -= defKeys_len; 
   }
 
   size_t defKey_bytes_todo = defKeys_len;
