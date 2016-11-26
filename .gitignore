@@ -20,4 +20,5 @@ src/Makefile.in
 src/mfoc
 src/mfoc.exe
 stamp-h1
+*.bak
 
