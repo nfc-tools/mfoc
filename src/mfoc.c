@@ -122,9 +122,9 @@ int main(int argc, char *const argv[])
   
   //File pointers for the keyfile 
   FILE * fp;
-  char * line = NULL;
+  char line[20];
   size_t len = 0;
-  ssize_t read;
+  char * read;
   
   //Regexp declarations
   static const char *regex = "([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
@@ -157,9 +157,8 @@ int main(int argc, char *const argv[])
                 fprintf(stderr, "Cannot open keyfile: %s, exiting\n", optarg);
                 exit(EXIT_FAILURE);
     }
-        while ((read = getline(&line, &len, fp)) != -1) {
+        while ((read = fgets(line, sizeof(line), fp)) != NULL) {
             int i, j = 0, str_len = strlen(line);
-
             while (j < str_len &&
                    (i = slre_match(regex, line + j, str_len - j, caps, 500, 1)) > 0) {
                 //We've found a key, let's add it to the structure.
@@ -177,8 +176,6 @@ int main(int argc, char *const argv[])
               j += i;
             }
         }
-        if (line)
-            free(line);
       break;      
       case 'k':
         // Add this key to the default keys
