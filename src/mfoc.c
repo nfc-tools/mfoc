@@ -72,41 +72,6 @@ uint32_t unknownSector = 0;
 char unknownKeyLetter = 'A';
 uint32_t unexpected_random = 0;
 
-// Determine the distance between two nonces.
-// Assume that the difference is small, but we don't know which is first.
-// Therefore try in alternating directions.
-int32_t dist_nt(uint32_t nt1, uint32_t nt2) {
-
-        if (nt1 == nt2) return 0;
-
-        uint16_t i;
-        uint32_t nttmp1 = nt1;
-        uint32_t nttmp2 = nt2;
-
-        for (i = 1; i < (32768/8); ++i) {
-                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i;
-                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -i;
-
-                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+1;
-                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+1);
-                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+2;
-                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+2);
-                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+3;
-                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+3);
-                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+4;
-                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+4);
-                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+5;
-                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+5);
-                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+6;
-                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+6);
-                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+7;
-                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+7);
-        }
-        // either nt1 or nt2 are invalid nonces
-        return(-99999);
-}
-
-
 int main(int argc, char *const argv[])
 {
   int ch, i, k, n, j, m;
@@ -1093,23 +1058,13 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
       }
       NtLast = bytes_to_num(Rx, 4) ^ crypto1_word(pcs, bytes_to_num(Rx, 4) ^ t.authuid, 1);
 
+      // Make sure the card is using the known PRNG
+      if (! validate_prng_nonce(NtLast)) {
+           printf("Card is not vulnerable to nested attack\n");
+           return -99999;
+      }
       // Save the determined nonces distance
       d->distances[m] = nonce_distance(Nt, NtLast);
-      int checkForValidPRNG = dist_nt(Nt, NtLast);
-      //printf("NT distance: %d\n", checkForValidPRNG);
-
-      // if no distance between,  then we are in sync.
-      if (checkForValidPRNG == 0) {
-          printf("NT Distance is zero..........\n");
-      } else {
-          if (checkForValidPRNG == -99999) { // invalid nonce received
-              ++unexpected_random;
-              if (unexpected_random > 4) {
-                   printf("PRNG is not vulnerable to nested attack\n");
-                   return -99999;
-              }
-          }
-      }
 
       // Again, prepare and send {At}
       for (i = 0; i < 4; i++) {
