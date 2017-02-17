@@ -65,6 +65,48 @@ static const nfc_modulation nm = {
 
 nfc_context *context;
 
+uint64_t knownKey = 0;
+char knownKeyLetter = 'A';
+uint32_t knownSector = 0;
+uint32_t unknownSector = 0;
+char unknownKeyLetter = 'A';
+uint32_t unexpected_random = 0;
+
+// Determine the distance between two nonces.
+// Assume that the difference is small, but we don't know which is first.
+// Therefore try in alternating directions.
+int32_t dist_nt(uint32_t nt1, uint32_t nt2) {
+
+        if (nt1 == nt2) return 0;
+
+        uint16_t i;
+        uint32_t nttmp1 = nt1;
+        uint32_t nttmp2 = nt2;
+
+        for (i = 1; i < (32768/8); ++i) {
+                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i;
+                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -i;
+
+                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+1;
+                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+1);
+                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+2;
+                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+2);
+                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+3;
+                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+3);
+                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+4;
+                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+4);
+                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+5;
+                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+5);
+                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+6;
+                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+6);
+                nttmp1 = prng_successor(nttmp1, 1);     if (nttmp1 == nt2) return i+7;
+                nttmp2 = prng_successor(nttmp2, 1);     if (nttmp2 == nt1) return -(i+7);
+        }
+        // either nt1 or nt2 are invalid nonces
+        return(-99999);
+}
+
+
 int main(int argc, char *const argv[])
 {
   int ch, i, k, n, j, m;
@@ -119,6 +161,7 @@ int main(int argc, char *const argv[])
 
   mifare_cmd mc;
   FILE *pfDump = NULL;
+  FILE *pfKey = NULL;
   
   //File pointers for the keyfile 
   FILE * fp;
@@ -194,6 +237,14 @@ int main(int argc, char *const argv[])
       case 'O':
         // File output
         if (!(pfDump = fopen(optarg, "wb"))) {
+          fprintf(stderr, "Cannot open: %s, exiting\n", optarg);
+          exit(EXIT_FAILURE);
+        }
+        // fprintf(stdout, "Output file: %s\n", optarg);
+        break;
+      case 'D':
+        // Partial File output
+        if (!(pfKey = fopen(optarg, "w"))) {
           fprintf(stderr, "Cannot open: %s, exiting\n", optarg);
           exit(EXIT_FAILURE);
         }
@@ -427,14 +478,28 @@ int main(int argc, char *const argv[])
 
   fprintf(stdout, "\n");
   for (i = 0; i < (t.num_sectors); ++i) {
-    if(t.sectors[i].foundKeyA)
+    if(t.sectors[i].foundKeyA){
       fprintf(stdout, "Sector %02d - Found   Key A: %012llx ", i, bytes_to_num(t.sectors[i].KeyA, sizeof(t.sectors[i].KeyA)));
-    else
+      memcpy(&knownKey, t.sectors[i].KeyA, 6);
+      knownKeyLetter = 'A';
+      knownSector = i;
+    }
+    else{
       fprintf(stdout, "Sector %02d - Unknown Key A               ", i);
-    if(t.sectors[i].foundKeyB)
+      unknownSector = i;
+      unknownKeyLetter = 'A';
+    }
+    if(t.sectors[i].foundKeyB){
       fprintf(stdout, "Found   Key B: %012llx\n", bytes_to_num(t.sectors[i].KeyB, sizeof(t.sectors[i].KeyB)));
-    else
+      knownKeyLetter = 'B';
+      memcpy(&knownKey, t.sectors[i].KeyB, 6);
+      knownSector = i;
+    }
+    else{
       fprintf(stdout, "Unknown Key B\n");
+      unknownSector = i;
+      unknownKeyLetter = 'B';
+    }
   }
   fflush(stdout);
 
@@ -510,7 +575,18 @@ int main(int argc, char *const argv[])
         // Max probes for auth for each sector
         for (k = 0; k < probes; ++k) {
           // Try to authenticate to exploit sector and determine distances (filling denonce.distances)
-          mf_enhanced_auth(e_sector, 0, t, r, &d, pk, 'd', dumpKeysA); // AUTH + Get Distances mode
+          int authresult = mf_enhanced_auth(e_sector, 0, t, r, &d, pk, 'd', dumpKeysA); // AUTH + Get Distances mode
+          if(authresult == -99999){
+                //for now we return the last sector that is unknown
+                nfc_close(r.pdi);
+                nfc_exit(context);
+                if(pfKey) {
+                    fprintf(pfKey, "%012llx;%d;%c;%d;%c", knownKey, knownSector, knownKeyLetter, unknownSector, unknownKeyLetter);
+                    fclose(pfKey);
+                }
+                return 9;
+          }
+
           printf("Sector: %d, type %c, probe %d, distance %d ", j, (dumpKeysA ? 'A' : 'B'), k, d.median);
           // Configure device to the previous state
           mf_configure(r.pdi);
@@ -726,6 +802,7 @@ void usage(FILE *stream, int errno)
   fprintf(stream, "  T     nonce tolerance half-range, instead of default of 20\n        (i.e., 40 for the total range, in both directions)\n");
 //    fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
   fprintf(stream, "  O     file in which the card contents will be written (REQUIRED)\n");
+  fprintf(stream, "  D     file in which partial card info will be written in case PRNG is not vulnerable\n");
   fprintf(stream, "\n");
   fprintf(stream, "Example: mfoc -O mycard.mfd\n");
   fprintf(stream, "Example: mfoc -k ffffeeeedddd -O mycard.mfd\n");
@@ -1018,7 +1095,21 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 
       // Save the determined nonces distance
       d->distances[m] = nonce_distance(Nt, NtLast);
-      // fprintf(stdout, "distance: %05d\n", d->distances[m]);
+      int checkForValidPRNG = dist_nt(Nt, NtLast);
+      //printf("NT distance: %d\n", checkForValidPRNG);
+
+      // if no distance between,  then we are in sync.
+      if (checkForValidPRNG == 0) {
+          printf("NT Distance is zero..........\n");
+      } else {
+          if (checkForValidPRNG == -99999) { // invalid nonce received
+              ++unexpected_random;
+              if (unexpected_random > 4) {
+                   printf("PRNG is not vulnerable to nested attack\n");
+                   return -99999;
+              }
+          }
+      }
 
       // Again, prepare and send {At}
       for (i = 0; i < 4; i++) {
