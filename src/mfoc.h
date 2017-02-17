@@ -8,6 +8,8 @@
 #define NR_TRAILERS_MINI (5)
 // Mifare Classic 4k 32x64b + 8*256b = 40
 #define NR_TRAILERS_4k  (40)
+// Mifare Classic 2k 32x64b
+#define NR_TRAILERS_2k  (32)
 
 // Number of blocks
 // Mifare Classic 1k
@@ -16,6 +18,8 @@
 #define NR_BLOCKS_MINI 0x13
 // Mifare Classic 4k
 #define NR_BLOCKS_4k 0xff
+// Mifare Classic 2k
+#define NR_BLOCKS_2k 0x7f
 
 #define MAX_FRAME_LEN 264
 
@@ -85,6 +89,7 @@ void mf_select_tag(nfc_device *pdi, nfc_target *pnt);
 int trailer_block(uint32_t block);
 int find_exploit_sector(mftag t);
 void mf_anticollision(mftag t, mfreader r);
+bool get_rats_is_2k(mftag t, mfreader r);
 int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d, pKeys *pk, char mode, bool dumpKeysA);
 uint32_t median(denonce d);
 int compar_int(const void *a, const void *b);

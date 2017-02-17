@@ -56,15 +56,17 @@
 #include "slre.h"
 #include "slre.c"
 
+#define MAX_FRAME_LEN 264
+
+static const nfc_modulation nm = {
+.nmt = NMT_ISO14443A,
+.nbr = NBR_106,
+};
+
 nfc_context *context;
 
 int main(int argc, char *const argv[])
 {
-  const nfc_modulation nm = {
-    .nmt = NMT_ISO14443A,
-    .nbr = NBR_106,
-  };
-
   int ch, i, k, n, j, m;
   int key, block;
   int succeed = 1;
@@ -270,9 +272,15 @@ int main(int argc, char *const argv[])
     case 0x01:
     case 0x08:
     case 0x88:
-      printf("Found Mifare Classic 1k tag\n");
-      t.num_sectors = NR_TRAILERS_1k;
-      t.num_blocks = NR_BLOCKS_1k;
+      if (get_rats_is_2k(t, r)) {
+          printf("Found Mifare Plus 2k tag\n");
+          t.num_sectors = NR_TRAILERS_2k;
+          t.num_blocks = NR_BLOCKS_2k;
+      } else {
+        printf("Found Mifare Classic 1k tag\n");
+        t.num_sectors = NR_TRAILERS_1k;
+        t.num_blocks = NR_BLOCKS_1k;
+      }
       break;
     case 0x09:
       printf("Found Mifare Classic Mini tag\n");
@@ -781,11 +789,6 @@ void mf_configure(nfc_device *pdi)
 
 void mf_select_tag(nfc_device *pdi, nfc_target *pnt)
 {
-  // Poll for a ISO14443A (MIFARE) tag
-  const nfc_modulation nm = {
-    .nmt = NMT_ISO14443A,
-    .nbr = NBR_106,
-  };
   if (nfc_initiator_select_passive_target(pdi, nm, NULL, 0, pnt) < 0) {
     ERR("Unable to connect to the MIFARE Classic tag");
     nfc_close(pdi);
@@ -828,14 +831,52 @@ int find_exploit_sector(mftag t)
 
 void mf_anticollision(mftag t, mfreader r)
 {
-  const nfc_modulation nm = {
-    .nmt = NMT_ISO14443A,
-    .nbr = NBR_106,
-  };
   if (nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) < 0) {
     nfc_perror(r.pdi, "nfc_initiator_select_passive_target");
     ERR("Tag has been removed");
     exit(EXIT_FAILURE);
+  }
+}
+
+
+bool
+get_rats_is_2k(mftag t, mfreader r)
+{
+  int res;
+  uint8_t abtRx[MAX_FRAME_LEN];
+  int szRxBits;
+  uint8_t  abtRats[2] = { 0xe0, 0x50};
+  // Use raw send/receive methods
+  if (nfc_device_set_property_bool(r.pdi, NP_EASY_FRAMING, false) < 0) {
+    nfc_perror(r.pdi, "nfc_configure");
+    return false;
+  }
+  res = nfc_initiator_transceive_bytes(r.pdi, abtRats, sizeof(abtRats), abtRx, sizeof(abtRx), 0);
+  if (res > 0) {
+    // ISO14443-4 card, turn RF field off/on to access ISO14443-3 again
+    if (nfc_device_set_property_bool(r.pdi, NP_ACTIVATE_FIELD, false) < 0) {
+      nfc_perror(r.pdi, "nfc_configure");
+      return false;
+    }
+    if (nfc_device_set_property_bool(r.pdi, NP_ACTIVATE_FIELD, true) < 0) {
+      nfc_perror(r.pdi, "nfc_configure");
+      return false;
+    }
+  }
+  // Reselect tag
+  if (nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) <= 0) {
+    printf("Error: tag disappeared\n");
+    nfc_close(r.pdi);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
+  }
+  if (res >= 10) {
+    printf("ATS %02X%02X%02X%02X%02X|%02X%02X%02X%02X\n", res, abtRx[0], abtRx[1], abtRx[2], abtRx[3], abtRx[4], abtRx[5], abtRx[6], abtRx[7], abtRx[8]);
+    return ((abtRx[5] == 0xc1) && (abtRx[6] == 0x05)
+            && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
+            && ((t.nt.nti.nai.abtAtqa[1] & 0x02) == 0x00));
+  } else {
+    return false;
   }
 }
 
