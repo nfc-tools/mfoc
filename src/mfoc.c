@@ -256,7 +256,7 @@ int main(int argc, char *const argv[])
   }
 
   // Test if a compatible MIFARE tag is used
-  if ((t.nt.nti.nai.btSak & 0x08) == 0) {
+  if (((t.nt.nti.nai.btSak & 0x08) == 0) && (t.nt.nti.nai.btSak != 0x01)) {
     ERR("only Mifare Classic is supported");
     goto error;
   }
@@ -267,6 +267,7 @@ int main(int argc, char *const argv[])
   // see http://www.nxp.com/documents/application_note/AN10833.pdf Section 3.2
   switch (t.nt.nti.nai.btSak)
   {
+    case 0x01:
     case 0x08:
     case 0x88:
       printf("Found Mifare Classic 1k tag\n");
