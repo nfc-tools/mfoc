@@ -56,15 +56,24 @@
 #include "slre.h"
 #include "slre.c"
 
+#define MAX_FRAME_LEN 264
+
+static const nfc_modulation nm = {
+.nmt = NMT_ISO14443A,
+.nbr = NBR_106,
+};
+
 nfc_context *context;
+
+uint64_t knownKey = 0;
+char knownKeyLetter = 'A';
+uint32_t knownSector = 0;
+uint32_t unknownSector = 0;
+char unknownKeyLetter = 'A';
+uint32_t unexpected_random = 0;
 
 int main(int argc, char *const argv[])
 {
-  const nfc_modulation nm = {
-    .nmt = NMT_ISO14443A,
-    .nbr = NBR_106,
-  };
-
   int ch, i, k, n, j, m;
   int key, block;
   int succeed = 1;
@@ -117,12 +126,13 @@ int main(int argc, char *const argv[])
 
   mifare_cmd mc;
   FILE *pfDump = NULL;
+  FILE *pfKey = NULL;
   
   //File pointers for the keyfile 
   FILE * fp;
-  char * line = NULL;
+  char line[20];
   size_t len = 0;
-  ssize_t read;
+  char * read;
   
   //Regexp declarations
   static const char *regex = "([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
@@ -155,9 +165,8 @@ int main(int argc, char *const argv[])
                 fprintf(stderr, "Cannot open keyfile: %s, exiting\n", optarg);
                 exit(EXIT_FAILURE);
     }
-        while ((read = getline(&line, &len, fp)) != -1) {
+        while ((read = fgets(line, sizeof(line), fp)) != NULL) {
             int i, j = 0, str_len = strlen(line);
-
             while (j < str_len &&
                    (i = slre_match(regex, line + j, str_len - j, caps, 500, 1)) > 0) {
                 //We've found a key, let's add it to the structure.
@@ -175,8 +184,6 @@ int main(int argc, char *const argv[])
               j += i;
             }
         }
-        if (line)
-            free(line);
       break;      
       case 'k':
         // Add this key to the default keys
@@ -195,6 +202,14 @@ int main(int argc, char *const argv[])
       case 'O':
         // File output
         if (!(pfDump = fopen(optarg, "wb"))) {
+          fprintf(stderr, "Cannot open: %s, exiting\n", optarg);
+          exit(EXIT_FAILURE);
+        }
+        // fprintf(stdout, "Output file: %s\n", optarg);
+        break;
+      case 'D':
+        // Partial File output
+        if (!(pfKey = fopen(optarg, "w"))) {
           fprintf(stderr, "Cannot open: %s, exiting\n", optarg);
           exit(EXIT_FAILURE);
         }
@@ -256,7 +271,7 @@ int main(int argc, char *const argv[])
   }
 
   // Test if a compatible MIFARE tag is used
-  if ((t.nt.nti.nai.btSak & 0x08) == 0) {
+  if (((t.nt.nti.nai.btSak & 0x08) == 0) && (t.nt.nti.nai.btSak != 0x01)) {
     ERR("only Mifare Classic is supported");
     goto error;
   }
@@ -267,11 +282,18 @@ int main(int argc, char *const argv[])
   // see http://www.nxp.com/documents/application_note/AN10833.pdf Section 3.2
   switch (t.nt.nti.nai.btSak)
   {
+    case 0x01:
     case 0x08:
     case 0x88:
-      printf("Found Mifare Classic 1k tag\n");
-      t.num_sectors = NR_TRAILERS_1k;
-      t.num_blocks = NR_BLOCKS_1k;
+      if (get_rats_is_2k(t, r)) {
+          printf("Found Mifare Plus 2k tag\n");
+          t.num_sectors = NR_TRAILERS_2k;
+          t.num_blocks = NR_BLOCKS_2k;
+      } else {
+        printf("Found Mifare Classic 1k tag\n");
+        t.num_sectors = NR_TRAILERS_1k;
+        t.num_blocks = NR_BLOCKS_1k;
+      }
       break;
     case 0x09:
       printf("Found Mifare Classic Mini tag\n");
@@ -421,14 +443,28 @@ int main(int argc, char *const argv[])
 
   fprintf(stdout, "\n");
   for (i = 0; i < (t.num_sectors); ++i) {
-    if(t.sectors[i].foundKeyA)
+    if(t.sectors[i].foundKeyA){
       fprintf(stdout, "Sector %02d - Found   Key A: %012llx ", i, bytes_to_num(t.sectors[i].KeyA, sizeof(t.sectors[i].KeyA)));
-    else
+      memcpy(&knownKey, t.sectors[i].KeyA, 6);
+      knownKeyLetter = 'A';
+      knownSector = i;
+    }
+    else{
       fprintf(stdout, "Sector %02d - Unknown Key A               ", i);
-    if(t.sectors[i].foundKeyB)
+      unknownSector = i;
+      unknownKeyLetter = 'A';
+    }
+    if(t.sectors[i].foundKeyB){
       fprintf(stdout, "Found   Key B: %012llx\n", bytes_to_num(t.sectors[i].KeyB, sizeof(t.sectors[i].KeyB)));
-    else
+      knownKeyLetter = 'B';
+      memcpy(&knownKey, t.sectors[i].KeyB, 6);
+      knownSector = i;
+    }
+    else{
       fprintf(stdout, "Unknown Key B\n");
+      unknownSector = i;
+      unknownKeyLetter = 'B';
+    }
   }
   fflush(stdout);
 
@@ -504,7 +540,18 @@ int main(int argc, char *const argv[])
         // Max probes for auth for each sector
         for (k = 0; k < probes; ++k) {
           // Try to authenticate to exploit sector and determine distances (filling denonce.distances)
-          mf_enhanced_auth(e_sector, 0, t, r, &d, pk, 'd', dumpKeysA); // AUTH + Get Distances mode
+          int authresult = mf_enhanced_auth(e_sector, 0, t, r, &d, pk, 'd', dumpKeysA); // AUTH + Get Distances mode
+          if(authresult == -99999){
+                //for now we return the last sector that is unknown
+                nfc_close(r.pdi);
+                nfc_exit(context);
+                if(pfKey) {
+                    fprintf(pfKey, "%012llx;%d;%c;%d;%c", knownKey, knownSector, knownKeyLetter, unknownSector, unknownKeyLetter);
+                    fclose(pfKey);
+                }
+                return 9;
+          }
+
           printf("Sector: %d, type %c, probe %d, distance %d ", j, (dumpKeysA ? 'A' : 'B'), k, d.median);
           // Configure device to the previous state
           mf_configure(r.pdi);
@@ -680,7 +727,7 @@ int main(int argc, char *const argv[])
     }
 
     // Finally save all keys + data to file
-    uint16_t dump_size = (t.num_blocks + 1) * t.num_sectors;
+    uint16_t dump_size = (t.num_blocks + 1) * 16;
     if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
       fprintf(stdout, "Error, cannot write dump\n");
       fclose(pfDump);
@@ -720,6 +767,7 @@ void usage(FILE *stream, int errno)
   fprintf(stream, "  T     nonce tolerance half-range, instead of default of 20\n        (i.e., 40 for the total range, in both directions)\n");
 //    fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
   fprintf(stream, "  O     file in which the card contents will be written (REQUIRED)\n");
+  fprintf(stream, "  D     file in which partial card info will be written in case PRNG is not vulnerable\n");
   fprintf(stream, "\n");
   fprintf(stream, "Example: mfoc -O mycard.mfd\n");
   fprintf(stream, "Example: mfoc -k ffffeeeedddd -O mycard.mfd\n");
@@ -780,11 +828,6 @@ void mf_configure(nfc_device *pdi)
 
 void mf_select_tag(nfc_device *pdi, nfc_target *pnt)
 {
-  // Poll for a ISO14443A (MIFARE) tag
-  const nfc_modulation nm = {
-    .nmt = NMT_ISO14443A,
-    .nbr = NBR_106,
-  };
   if (nfc_initiator_select_passive_target(pdi, nm, NULL, 0, pnt) < 0) {
     ERR("Unable to connect to the MIFARE Classic tag");
     nfc_close(pdi);
@@ -827,14 +870,52 @@ int find_exploit_sector(mftag t)
 
 void mf_anticollision(mftag t, mfreader r)
 {
-  const nfc_modulation nm = {
-    .nmt = NMT_ISO14443A,
-    .nbr = NBR_106,
-  };
   if (nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) < 0) {
     nfc_perror(r.pdi, "nfc_initiator_select_passive_target");
     ERR("Tag has been removed");
     exit(EXIT_FAILURE);
+  }
+}
+
+
+bool
+get_rats_is_2k(mftag t, mfreader r)
+{
+  int res;
+  uint8_t abtRx[MAX_FRAME_LEN];
+  int szRxBits;
+  uint8_t  abtRats[2] = { 0xe0, 0x50};
+  // Use raw send/receive methods
+  if (nfc_device_set_property_bool(r.pdi, NP_EASY_FRAMING, false) < 0) {
+    nfc_perror(r.pdi, "nfc_configure");
+    return false;
+  }
+  res = nfc_initiator_transceive_bytes(r.pdi, abtRats, sizeof(abtRats), abtRx, sizeof(abtRx), 0);
+  if (res > 0) {
+    // ISO14443-4 card, turn RF field off/on to access ISO14443-3 again
+    if (nfc_device_set_property_bool(r.pdi, NP_ACTIVATE_FIELD, false) < 0) {
+      nfc_perror(r.pdi, "nfc_configure");
+      return false;
+    }
+    if (nfc_device_set_property_bool(r.pdi, NP_ACTIVATE_FIELD, true) < 0) {
+      nfc_perror(r.pdi, "nfc_configure");
+      return false;
+    }
+  }
+  // Reselect tag
+  if (nfc_initiator_select_passive_target(r.pdi, nm, NULL, 0, &t.nt) <= 0) {
+    printf("Error: tag disappeared\n");
+    nfc_close(r.pdi);
+    nfc_exit(context);
+    exit(EXIT_FAILURE);
+  }
+  if (res >= 10) {
+    printf("ATS %02X%02X%02X%02X%02X|%02X%02X%02X%02X\n", res, abtRx[0], abtRx[1], abtRx[2], abtRx[3], abtRx[4], abtRx[5], abtRx[6], abtRx[7], abtRx[8]);
+    return ((abtRx[5] == 0xc1) && (abtRx[6] == 0x05)
+            && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
+            && ((t.nt.nti.nai.abtAtqa[1] & 0x02) == 0x00));
+  } else {
+    return false;
   }
 }
 
@@ -977,9 +1058,13 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
       }
       NtLast = bytes_to_num(Rx, 4) ^ crypto1_word(pcs, bytes_to_num(Rx, 4) ^ t.authuid, 1);
 
+      // Make sure the card is using the known PRNG
+      if (! validate_prng_nonce(NtLast)) {
+           printf("Card is not vulnerable to nested attack\n");
+           return -99999;
+      }
       // Save the determined nonces distance
       d->distances[m] = nonce_distance(Nt, NtLast);
-      // fprintf(stdout, "distance: %05d\n", d->distances[m]);
 
       // Again, prepare and send {At}
       for (i = 0; i < 4; i++) {

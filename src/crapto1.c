@@ -374,6 +374,12 @@ int nonce_distance(uint32_t from, uint32_t to)
   }
   return (65535 + dist[to >> 16] - dist[from >> 16]) % 65535;
 }
+bool validate_prng_nonce(uint32_t nonce)
+{
+  // init prng table:
+  nonce_distance(nonce, nonce);
+  return ((65535 - dist[nonce >> 16] + dist[nonce & 0xffff]) % 65535) == 16;
+}
 
 
 static uint32_t fastfwd[2][8] = {
