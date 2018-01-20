@@ -10,6 +10,7 @@ Please note MFOC is able to recover keys from target only if it have a known key
 libtoolize --force
 aclocal
 autoheader
+autoconf
 automake --force-missing --add-missing
 ./configure
 make && sudo make install
