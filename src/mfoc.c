@@ -910,7 +910,7 @@ get_rats_is_2k(mftag t, mfreader r)
     exit(EXIT_FAILURE);
   }
   if (res >= 10) {
-    printf("ATS %02X%02X%02X%02X%02X|%02X%02X%02X%02X\n", res, abtRx[0], abtRx[1], abtRx[2], abtRx[3], abtRx[4], abtRx[5], abtRx[6], abtRx[7], abtRx[8]);
+    printf("ATS %02X%02X%02X%02X%02X|%02X%02X%02X%02X%02X\n", res, abtRx[0], abtRx[1], abtRx[2], abtRx[3], abtRx[4], abtRx[5], abtRx[6], abtRx[7], abtRx[8]);
     return ((abtRx[5] == 0xc1) && (abtRx[6] == 0x05)
             && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
             && ((t.nt.nti.nai.abtAtqa[1] & 0x02) == 0x00));
