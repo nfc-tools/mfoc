@@ -7,7 +7,10 @@ Please note MFOC is able to recover keys from target only if it have a known key
 # Build from source
 
 ```
-autoreconf -is
+libtoolize --force
+aclocal
+autoheader
+automake --force-missing --add-missing
 ./configure
 make && sudo make install
 ```
