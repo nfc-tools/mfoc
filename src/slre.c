@@ -34,11 +34,11 @@
 #ifdef SLRE_DEBUG
 # ifndef DBG
 #  define DBG(x) printf x
-# endif DBG
+# endif
 #else
 # ifndef DBG
 #  define DBG(x)
-# endif DBG
+# endif
 #endif
 
 struct bracket_pair {
