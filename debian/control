@@ -1,17 +1,18 @@
 Source: mfoc
 Section: utils
-Priority: extra
-Maintainer: Thomas Hood <jdthood@gmail.com>
-Build-Depends: debhelper (>=9), dh-autoreconf, libnfc-dev (>= 1.7.0~rc1), pkg-config
-Standards-Version: 3.9.4
-Homepage: http://code.google.com/p/mfoc/
-Vcs-Git: http://code.google.com/p/mfoc/
-Vcs-Browser: http://code.google.com/p/mfoc/source/browse/
+Priority: optional
+Maintainer: Debian Security Tools <team+pkg-security@tracker.debian.org>
+Uploaders: Samuel Henrique <samueloph@debian.org>
+Build-Depends: debhelper (>= 11), libnfc-dev, pkg-config
+Standards-Version: 4.1.5
+Homepage: https://github.com/nfc-tools/mfoc
+Vcs-Browser: https://salsa.debian.org/pkg-security-team/mfoc
+Vcs-Git: https://salsa.debian.org/pkg-security-team/mfoc.git
 
 Package: mfoc
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: MIFARE Classic offline cracker
- MFOC is an open source implementation of "offline nested" attack. It
- helps to recove keys from MIFARE Classic tags and dump content to a
- file.
+ This package includes the mfoc program which cracks the
+ encryption keys of the MIFARE Classic chip and dumps the
+ chip's memory contents to a file.

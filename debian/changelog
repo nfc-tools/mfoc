@@ -1,17 +1,67 @@
-mfoc (0.10.5-0) unstable; urgency=low
+mfoc (0.10.7+git20180724-1) unstable; urgency=medium
 
-  * New upstream release
+  * New upstream version 0.10.7+git20180724
 
- -- Romuald Conty <romuald@libnfc.org>  Thu, 14 Feb 2013 21:16:42 +0100
+ -- Samuel Henrique <samueloph@debian.org>  Tue, 24 Jul 2018 01:19:50 -0300
 
-mfoc (0.10.4-0) unstable; urgency=low
+mfoc (0.10.7+git20150512-0kali1) kali; urgency=medium
 
-  * New upstream release
+  * Import upstream (Closes: 0002240)
+  * Update debian files: watch, copyright
+  * Use debhelper 9
 
- -- Romuald Conty <romuald@libnfc.org>  Sun, 20 Jan 2013 15:58:42 +0100
+ -- Sophie Brun <sophie@freexian.com>  Tue, 12 May 2015 12:05:24 +0200
 
-mfoc (0.10.2pre3.1-0) unstable; urgency=low
+mfoc (0.10.7-0kali2) kali; urgency=low
 
-  * Initial package
+  * Updated watch file
 
- -- Thomas Hood <jdthood@gmail.com>  Wed, 18 May 2011 12:00:00 +0200
+ -- Mati Aharoni <muts@kali.org>  Sun, 12 Jan 2014 18:06:21 -0500
+
+mfoc (0.10.7-0kali1) kali; urgency=low
+
+  * Upstream import
+
+ -- Mati Aharoni <muts@kali.org>  Tue, 17 Dec 2013 09:12:38 -0500
+
+mfoc (0.10.6-0kali0) kali; urgency=low
+
+  * Upstream import
+
+ -- Mati Aharoni <muts@kali.org>  Mon, 19 Aug 2013 10:37:12 -0400
+
+mfoc (0.10.5-0kali0) kali; urgency=low
+
+  * Upstream import.
+
+ -- Mati Aharoni <muts@kali.org>  Sun, 24 Mar 2013 05:49:58 -0400
+
+mfoc (0.10.3-1kali4) kali; urgency=low
+
+  * Removed desktop file
+
+ -- Mati Aharoni <muts@kali.org>  Sat, 15 Dec 2012 14:23:37 -0500
+
+mfoc (0.10.3-1kali3) kali; urgency=low
+
+  * Fixed compilation issue
+
+ -- Mati Aharoni <muts@kali.org>  Tue, 04 Dec 2012 06:43:46 -0500
+
+mfoc (0.10.3-1kali2) kali; urgency=low
+
+  * Version bump
+
+ -- Mati Aharoni <muts@kali.org>  Sat, 01 Dec 2012 16:23:29 -0500
+
+mfoc (0.10.3-1kali1) kali; urgency=low
+
+  * Version bump
+
+ -- Mati Aharoni <muts@kali.org>  Sat, 01 Dec 2012 16:13:27 -0500
+
+mfoc (0.10.3-1kali0) kali; urgency=low
+
+  * Initial release 
+
+ -- Mati Aharoni <muts@kali.org>  Sat, 01 Dec 2012 13:42:57 -0500

@@ -1,7 +1,3 @@
-# See uscan(1) for format
+version=4
 
-# Compulsory line, this is a version 3 file
-version=3
-
-http://code.google.com/p/mfoc/downloads/list .*/mfoc-(.*).tar.gz
-
+https://github.com/nfc-tools/mfoc/tags/ .*/mfoc-(.*)\.tar\.gz
