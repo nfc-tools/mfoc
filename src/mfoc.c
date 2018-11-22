@@ -37,7 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <inttypes.h>
 #include <unistd.h>
 
 // NFC
@@ -131,7 +131,6 @@ int main(int argc, char *const argv[])
   //File pointers for the keyfile 
   FILE * fp;
   char line[20];
-  size_t len = 0;
   char * read;
   
   //Regexp declarations
@@ -546,7 +545,7 @@ int main(int argc, char *const argv[])
                 nfc_close(r.pdi);
                 nfc_exit(context);
                 if(pfKey) {
-                    fprintf(pfKey, "%012llx;%d;%c;%d;%c", knownKey, knownSector, knownKeyLetter, unknownSector, unknownKeyLetter);
+                    fprintf(pfKey, "%012" PRIu64 ";%d;%c;%d;%c", knownKey, knownSector, knownKeyLetter, unknownSector, unknownKeyLetter);
                     fclose(pfKey);
                 }
                 return 9;
@@ -883,7 +882,6 @@ get_rats_is_2k(mftag t, mfreader r)
 {
   int res;
   uint8_t abtRx[MAX_FRAME_LEN];
-  int szRxBits;
   uint8_t  abtRats[2] = { 0xe0, 0x50};
   // Use raw send/receive methods
   if (nfc_device_set_property_bool(r.pdi, NP_EASY_FRAMING, false) < 0) {
