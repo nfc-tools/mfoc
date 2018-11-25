@@ -47,7 +47,7 @@
 #include "crapto1.h"
 
 // Internal
-#include "config.h"
+#include "../config.h"
 #include "mifare.h"
 #include "nfc-utils.h"
 #include "mfoc.h"
@@ -95,18 +95,18 @@ int main(int argc, char *const argv[])
   // Array with default Mifare Classic keys
   uint8_t defaultKeys[][6] = {
     {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // Default key (first key used by program if no user defined key)
-    {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
-    {0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // Blank key
-    {0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5},
-    {0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd},
-    {0x1a, 0x98, 0x2c, 0x7e, 0x45, 0x9a},
-    {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
-    {0x71, 0x4c, 0x5c, 0x88, 0x6e, 0x97},
-    {0x58, 0x7e, 0xe5, 0xf9, 0x35, 0x0f},
-    {0xa0, 0x47, 0x8c, 0xc3, 0x90, 0x91},
-    {0x53, 0x3c, 0xb6, 0xc7, 0x23, 0xf6},
-    {0x8f, 0xd0, 0xa4, 0xf2, 0x56, 0xe9}
+//    {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
+//    {0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
+//    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // Blank key
+//    {0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5},
+//    {0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd},
+//    {0x1a, 0x98, 0x2c, 0x7e, 0x45, 0x9a},
+//    {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+//    {0x71, 0x4c, 0x5c, 0x88, 0x6e, 0x97},
+//    {0x58, 0x7e, 0xe5, 0xf9, 0x35, 0x0f},
+//    {0xa0, 0x47, 0x8c, 0xc3, 0x90, 0x91},
+//    {0x53, 0x3c, 0xb6, 0xc7, 0x23, 0xf6},
+//    {0x8f, 0xd0, 0xa4, 0xf2, 0x56, 0xe9}
 
   };
 
@@ -941,8 +941,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
 
   uint32_t Nt, NtLast, NtProbe, NtEnc, Ks1;
 
-  int i;
-  uint32_t m;
+  uint32_t m, i;
+  uint8_t pbits = 0, p;
 
   // Prepare AUTH command
   Auth[0] = (t.sectors[e_sector].foundKeyA) ? MC_AUTH_A : MC_AUTH_B;
@@ -1175,6 +1175,39 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
       }
     }
   }
+
+  if (mode == 'h') {
+    // Again, prepare the Auth command with MC_AUTH_A, recover the block and CRC
+    Auth[0] = dumpKeysA ? MC_AUTH_A : MC_AUTH_B;
+    Auth[1] = a_sector;
+    iso14443a_crc_append(Auth, 2);
+
+    // Encryption of the Auth command, sending the Auth command
+    for (i = 0; i < 4; i++) {
+        AuthEnc[i] = crypto1_byte(pcs, 0x00, 0) ^ Auth[i];
+        // Encrypt the parity bits with the 4 plaintext bytes
+        AuthEncPar[i] = filter(pcs->odd) ^ oddparity(Auth[i]);
+    }
+    if (nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar, Rx, sizeof (Rx), RxPar) < 0) {
+        ERR("while requesting encrypted tag-nonce");
+        exit(EXIT_FAILURE);
+    }
+    
+    // Save the encrypted nonce
+    NtEnc = bytes_to_num(Rx, 4);
+      
+    for (i = 0; i < 4; i++) {
+        p = oddparity(Rx[i]);
+        if (RxPar[i] != oddparity(Rx[i])) {
+            p ^= 1;
+        }
+        pbits <<= 1;
+        pbits |= p;
+    }
+//    num_acquired_nonces += add_nonce(NtEnc, pbits);
+      
+  }
+  
   crypto1_destroy(pcs);
   return 0;
 }

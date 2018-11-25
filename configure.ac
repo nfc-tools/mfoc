@@ -6,7 +6,9 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_SRCDIR([src/mfoc.c])
 
-AM_INIT_AUTOMAKE(dist-bzip2 no-dist-gzip)
+AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip subdir-objects])
+CFLAGS="$CFLAGS -O3"
+AX_CFLAGS_WARN_ALL
 
 AC_PROG_CC
 
@@ -15,6 +17,11 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 # Checks for pkg-config modules.
 LIBNFC_REQUIRED_VERSION=1.7.0
 PKG_CHECK_MODULES([libnfc], [libnfc >= $LIBNFC_REQUIRED_VERSION], [], [AC_MSG_ERROR([libnfc >= $LIBNFC_REQUIRED_VERSION is mandatory.])])
+
+PKG_CHECK_MODULES([liblzma], [liblzma], LIBS="$LIBS -llzma", [AC_MSG_ERROR([liblzma is mandatory.])])
+ACX_PTHREAD(LIBS="$LIBS $PTHREAD_CFLAGS", [AC_MSG_ERROR([pthread is mandatory.])])
+AC_CHECK_LIB(m, log, LIBS="$LIBS -lm", [AC_MSG_ERROR([math is mandatory.])])
+AX_LIB_READLINE
 
 PKG_CONFIG_REQUIRES="libnfc"
 AC_SUBST([PKG_CONFIG_REQUIRES])
@@ -35,7 +42,7 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset])
 
 # C99
-CFLAGS="$CFLAGS -std=c99 -O3 -Wall"
+CFLAGS="$CFLAGS -std=c99"
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
