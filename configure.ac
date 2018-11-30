@@ -7,7 +7,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mfoc.c])
 
 AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip subdir-objects])
-CFLAGS="$CFLAGS -g -g3"
+CFLAGS="$CFLAGS -O3"
 AX_CFLAGS_WARN_ALL
 
 AC_PROG_CC
