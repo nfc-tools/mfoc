@@ -7,7 +7,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/mfoc.c])
 
 AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip subdir-objects])
-CFLAGS="$CFLAGS -O3"
+CFLAGS="$CFLAGS -g -g3"
 AX_CFLAGS_WARN_ALL
 
 AC_PROG_CC
@@ -21,7 +21,6 @@ PKG_CHECK_MODULES([libnfc], [libnfc >= $LIBNFC_REQUIRED_VERSION], [], [AC_MSG_ER
 PKG_CHECK_MODULES([liblzma], [liblzma], LIBS="$LIBS -llzma", [AC_MSG_ERROR([liblzma is mandatory.])])
 ACX_PTHREAD(LIBS="$LIBS $PTHREAD_CFLAGS", [AC_MSG_ERROR([pthread is mandatory.])])
 AC_CHECK_LIB(m, log, LIBS="$LIBS -lm", [AC_MSG_ERROR([math is mandatory.])])
-AX_LIB_READLINE
 
 PKG_CONFIG_REQUIRES="libnfc"
 AC_SUBST([PKG_CONFIG_REQUIRES])

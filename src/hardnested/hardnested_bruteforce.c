@@ -63,6 +63,7 @@ THE SOFTWARE.
 #include "../util_posix.h"
 #include "../crapto1.h"
 #include "../parity.h"
+#include "mifare.h"
 
 #define NUM_BRUTE_FORCE_THREADS   (num_CPUs())
 #define DEFAULT_BRUTE_FORCE_RATE  (120000000.0)  // if benchmark doesn't succeed
@@ -147,6 +148,8 @@ crack_states_thread(void* x) {
         uint64_t maximum_states;
         noncelist_t *nonces;
         uint8_t* best_first_bytes;
+        uint8_t trgBlock;
+        uint8_t trgKey;
     } *thread_arg;
 
     thread_arg = (struct arg *) x;
@@ -163,7 +166,14 @@ crack_states_thread(void* x) {
                 __sync_fetch_and_add(&keys_found, 1);
                 char progress_text[80];
                 sprintf(progress_text, "Brute force phase completed. Key found: %012" PRIx64, key);
-                hardnested_print_progress(thread_arg->num_acquired_nonces, progress_text, 0.0, 0);
+                if (thread_arg->trgKey == MC_AUTH_A){
+                    t.sectors[thread_arg->trgBlock / 4].foundKeyA = true;
+                    memcpy(t.sectors[thread_arg->trgBlock / 4].KeyA, &key, sizeof(key));
+                } else {
+                    t.sectors[thread_arg->trgBlock / 4].foundKeyB = true;
+                    memcpy(t.sectors[thread_arg->trgBlock / 4].KeyB, &key, sizeof(key));
+                }
+                hardnested_print_progress(thread_arg->num_acquired_nonces, progress_text, 0.0, 0, thread_arg->trgBlock, thread_arg->trgKey);
                 break;
             } else if (keys_found) {
                 break;
@@ -172,7 +182,7 @@ crack_states_thread(void* x) {
                     char progress_text[80];
                     sprintf(progress_text, "Brute force phase: %6.02f%%", 100.0 * (float) num_keys_tested / (float) (thread_arg->maximum_states));
                     float remaining_bruteforce = thread_arg->nonces[thread_arg->best_first_bytes[0]].expected_num_brute_force - (float) num_keys_tested / 2;
-                    hardnested_print_progress(thread_arg->num_acquired_nonces, progress_text, remaining_bruteforce, 5000);
+                    hardnested_print_progress(thread_arg->num_acquired_nonces, progress_text, remaining_bruteforce, 5000, thread_arg->trgBlock, thread_arg->trgKey);
                 }
             }
         }
@@ -277,7 +287,7 @@ static void write_benchfile(statelist_t *candidates) {
 }
 #endif
 
-bool brute_force_bs(float *bf_rate, statelist_t *candidates, uint32_t cuid, uint32_t num_acquired_nonces, uint64_t maximum_states, noncelist_t *nonces, uint8_t *best_first_bytes) {
+bool brute_force_bs(float *bf_rate, statelist_t *candidates, uint32_t cuid, uint32_t num_acquired_nonces, uint64_t maximum_states, noncelist_t *nonces, uint8_t *best_first_bytes, uint8_t trgBlock, uint8_t trgKey) {
 #if defined (WRITE_BENCH_FILE)
     write_benchfile(candidates);
 #endif
@@ -322,6 +332,8 @@ bool brute_force_bs(float *bf_rate, statelist_t *candidates, uint32_t cuid, uint
         uint64_t maximum_states;
         noncelist_t *nonces;
         uint8_t *best_first_bytes;
+        uint8_t trgBlock;
+        uint8_t trgKey;
     } thread_args[NUM_BRUTE_FORCE_THREADS];
 
     for (uint32_t i = 0; i < NUM_BRUTE_FORCE_THREADS; i++) {
@@ -332,6 +344,8 @@ bool brute_force_bs(float *bf_rate, statelist_t *candidates, uint32_t cuid, uint
         thread_args[i].maximum_states = maximum_states;
         thread_args[i].nonces = nonces;
         thread_args[i].best_first_bytes = best_first_bytes;
+        thread_args[i].trgBlock = trgBlock;
+        thread_args[i].trgKey = trgKey;
         pthread_create(&threads[i], NULL, crack_states_thread, (void*) &thread_args[i]);
     }
     for (uint32_t i = 0; i < NUM_BRUTE_FORCE_THREADS; i++) {
@@ -363,8 +377,8 @@ static bool read_bench_data(statelist_t *test_candidates) {
     uint32_t num_states = 0;
     uint32_t states_read = 0;
 
-    char bench_file_path[strlen(".") + strlen(TEST_BENCH_FILENAME) + 1];
-    strcpy(bench_file_path, ".");
+    char bench_file_path[strlen(get_my_executable_directory()) + strlen(TEST_BENCH_FILENAME) + 1];
+    strcpy(bench_file_path, get_my_executable_directory());
     strcat(bench_file_path, TEST_BENCH_FILENAME);
 
     FILE *benchfile = fopen(bench_file_path, "rb");
@@ -453,7 +467,7 @@ float brute_force_benchmark() {
     uint64_t maximum_states = TEST_BENCH_SIZE * TEST_BENCH_SIZE * (uint64_t) NUM_BRUTE_FORCE_THREADS;
 
     float bf_rate;
-    brute_force_bs(&bf_rate, test_candidates, 0, 0, maximum_states, NULL, 0);
+    brute_force_bs(&bf_rate, test_candidates, 0, 0, maximum_states, NULL, 0, 0, 0);
 
     free(test_candidates[0].states[ODD_STATE]);
     free(test_candidates[0].states[EVEN_STATE]);
