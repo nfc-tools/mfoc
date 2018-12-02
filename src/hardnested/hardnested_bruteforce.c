@@ -64,6 +64,7 @@ THE SOFTWARE.
 #include "../crapto1.h"
 #include "../parity.h"
 #include "mifare.h"
+#include "../bf_bench_data.h"
 
 #define NUM_BRUTE_FORCE_THREADS   (num_CPUs())
 #define DEFAULT_BRUTE_FORCE_RATE  (120000000.0)  // if benchmark doesn't succeed
@@ -370,73 +371,44 @@ bool brute_force_bs(float *bf_rate, statelist_t *candidates, uint32_t cuid, uint
     return (keys_found != 0);
 }
 
+static void _read(void *buf, size_t size, size_t count, uint8_t *stream, size_t *pos) {
+    size_t len = size * count;
+    memcpy(buf, &stream[*pos], len);
+    *pos += len;
+}
+
 static bool read_bench_data(statelist_t *test_candidates) {
 
-    size_t bytes_read = 0;
+    uint8_t *bench_data = bf_bench_data_bin;
+    size_t pos = 0;
+
     uint32_t temp = 0;
     uint32_t num_states = 0;
     uint32_t states_read = 0;
 
-    char bench_file_path[strlen(get_my_executable_directory()) + strlen(TEST_BENCH_FILENAME) + 1];
-    strcpy(bench_file_path, get_my_executable_directory());
-    strcat(bench_file_path, TEST_BENCH_FILENAME);
-
-    FILE *benchfile = fopen(bench_file_path, "rb");
-    if (benchfile == NULL) {
-        return false;
-    }
-    bytes_read = fread(&nonces_to_bruteforce, 1, sizeof (nonces_to_bruteforce), benchfile);
-    if (bytes_read != sizeof (nonces_to_bruteforce)) {
-        fclose(benchfile);
-        return false;
-    }
+    _read(&nonces_to_bruteforce, 1, sizeof (nonces_to_bruteforce), bench_data, &pos);
     for (uint16_t i = 0; i < nonces_to_bruteforce && i < 256; i++) {
-        bytes_read = fread(&bf_test_nonce[i], 1, sizeof (uint32_t), benchfile);
-        if (bytes_read != sizeof (uint32_t)) {
-            fclose(benchfile);
-            return false;
-        }
+        _read(&bf_test_nonce[i], 1, sizeof (uint32_t), bench_data, &pos);
         bf_test_nonce_2nd_byte[i] = (bf_test_nonce[i] >> 16) & 0xff;
-        bytes_read = fread(&bf_test_nonce_par[i], 1, sizeof (uint8_t), benchfile);
-        if (bytes_read != sizeof (uint8_t)) {
-            fclose(benchfile);
-            return false;
-        }
+        _read(&bf_test_nonce_par[i], 1, sizeof (uint8_t), bench_data, &pos);
     }
-    bytes_read = fread(&num_states, 1, sizeof (uint32_t), benchfile);
-    if (bytes_read != sizeof (uint32_t)) {
-        fclose(benchfile);
-        return false;
-    }
+    _read(&num_states, 1, sizeof (uint32_t), bench_data, &pos);
     for (states_read = 0; states_read < MIN(num_states, TEST_BENCH_SIZE); states_read++) {
-        bytes_read = fread(test_candidates->states[EVEN_STATE] + states_read, 1, sizeof (uint32_t), benchfile);
-        if (bytes_read != sizeof (uint32_t)) {
-            fclose(benchfile);
-            return false;
-        }
+        _read(test_candidates->states[EVEN_STATE] + states_read, 1, sizeof (uint32_t), bench_data, &pos);
     }
     for (uint32_t i = states_read; i < TEST_BENCH_SIZE; i++) {
         test_candidates->states[EVEN_STATE][i] = test_candidates->states[EVEN_STATE][i - states_read];
     }
     for (uint32_t i = states_read; i < num_states; i++) {
-        bytes_read = fread(&temp, 1, sizeof (uint32_t), benchfile);
-        if (bytes_read != sizeof (uint32_t)) {
-            fclose(benchfile);
-            return false;
-        }
+        _read(&temp, 1, sizeof (uint32_t), bench_data, &pos);
     }
     for (states_read = 0; states_read < MIN(num_states, TEST_BENCH_SIZE); states_read++) {
-        bytes_read = fread(test_candidates->states[ODD_STATE] + states_read, 1, sizeof (uint32_t), benchfile);
-        if (bytes_read != sizeof (uint32_t)) {
-            fclose(benchfile);
-            return false;
-        }
+        _read(test_candidates->states[ODD_STATE] + states_read, 1, sizeof (uint32_t), bench_data, &pos);
     }
     for (uint32_t i = states_read; i < TEST_BENCH_SIZE; i++) {
         test_candidates->states[ODD_STATE][i] = test_candidates->states[ODD_STATE][i - states_read];
     }
 
-    fclose(benchfile);
     return true;
 }
 

@@ -2,7 +2,7 @@ AM_CFLAGS  = @libnfc_CFLAGS@
 
 bin_PROGRAMS = mfoc
 
-noinst_HEADERS = crapto1.h mfoc.h mifare.h nfc-utils.h parity.h hardnested/hardnested_bruteforce.h hardnested/tables.h cmdhfmfhard.h util.h util_posix.h ui.h
+noinst_HEADERS = crapto1.h mfoc.h mifare.h nfc-utils.h parity.h hardnested/hardnested_bruteforce.h hardnested/tables.h cmdhfmfhard.h util.h util_posix.h ui.h bf_bench_data.h
 
 mfoc_SOURCES = crapto1.c crypto1.c mfoc.c mifare.c nfc-utils.c parity.c hardnested/hardnested_bruteforce.c hardnested/tables.c cmdhfmfhard.c util.c util_posix.c ui.c
 mfoc_LDADD   = @libnfc_LIBS@ $(MULTIARCHOBJS)
