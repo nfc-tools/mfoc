@@ -102,14 +102,14 @@ static void print_progress_header(void) {
     char instr_set[12] = {0};
     get_SIMD_instruction_set(instr_set);
     sprintf(progress_text, "Start using %d threads and %s SIMD core", num_CPUs(), instr_set);
-    PrintAndLog("\n\n");
-    PrintAndLog(" time    | #nonces | Activity                                                | expected to brute force");
-    PrintAndLog("         |         |                                                         | #states         | time ");
-    PrintAndLog("------------------------------------------------------------------------------------------------------");
-    PrintAndLog("       0 |       0 | %-55s |                 |", progress_text);
+    PrintAndLog(true, "\n\n");
+    PrintAndLog(true, " time    | trg | #nonces | Activity                                                | expected to brute force");
+    PrintAndLog(true, "         |     |         |                                                         | #states         | time ");
+    PrintAndLog(true, "-------------------------------------------------------------------------------------------------------------");
+    PrintAndLog(true, "       0 |  0? |       0 | %-55s |                 |", progress_text);
 }
 
-void hardnested_print_progress(uint32_t nonces, char *activity, float brute_force, uint64_t min_diff_print_time, uint8_t trgKeyBlock, uint8_t trgKeyType) {
+void hardnested_print_progress(uint32_t nonces, char *activity, float brute_force, uint64_t min_diff_print_time, uint8_t trgKeyBlock, uint8_t trgKeyType, bool newline) {
     static uint64_t last_print_time = 0;
     static uint8_t keyType;
     if (msclock() - last_print_time > min_diff_print_time) {
@@ -126,16 +126,16 @@ void hardnested_print_progress(uint32_t nonces, char *activity, float brute_forc
         } else {
             sprintf(brute_force_time_string, "%2.0fd", brute_force_time / (60 * 60 * 24));
         }
-        
+
         if (trgKeyType == MC_AUTH_A) {
             keyType = 'A';
-        } else if (trgKeyType == MC_AUTH_B){
+        } else if (trgKeyType == MC_AUTH_B) {
             keyType = 'B';
         } else {
             keyType = '?';
         }
-        
-        PrintAndLog(" %7.0f | %2d%c | %7d | %-55s | %15.0f | %5s", (float) total_time / 1000.0, trgKeyBlock / 4, keyType, nonces, activity, brute_force, brute_force_time_string);
+
+        PrintAndLog(newline, " %7.0f | %2d%c | %7d | %-55s | %15.0f | %5s", (float) total_time / 1000.0, trgKeyBlock / 4, keyType, nonces, activity, brute_force, brute_force_time_string);
     }
 }
 
@@ -245,7 +245,7 @@ static int compare_count_bitflip_bitarrays(const void *b1, const void *b2) {
 const char *get_my_executable_directory() {
     char cwd[1024];
     char extra[] = "/src/";
-    static char dir_path[sizeof (cwd) + sizeof(extra)];
+    static char dir_path[sizeof (cwd) + sizeof (extra)];
 
     if (getcwd(cwd, sizeof (cwd)) == NULL) {
         perror("getcwd() error");
@@ -366,7 +366,7 @@ static void init_bitflip_bitarrays(void) {
 #endif 
     char progress_text[80];
     sprintf(progress_text, "Using %d precalculated bitflip state tables", num_all_effective_bitflips);
-    hardnested_print_progress(0, progress_text, (float) (1LL << 47), 0, 0, 0);
+    hardnested_print_progress(0, progress_text, (float) (1LL << 47), 0, 0, 0, true);
 }
 
 static void free_bitflip_bitarrays(void) {
@@ -1214,18 +1214,6 @@ static void apply_sum_a0(void) {
     }
 }
 
-//extern mfreader r;
-//extern mftag t;
-
-nfc_device* pnd;
-uint32_t uid;
-nfc_target target;
-
-uint64_t known_key;
-uint8_t for_block;
-uint8_t ab_key;
-uint8_t target_block;
-uint8_t target_key;
 
 const nfc_modulation nmMifare = {
     .nmt = NMT_ISO14443A,
@@ -1237,148 +1225,6 @@ enum {
     ERROR,
     KEY_WRONG,
 };
-
-// Almost entirely based on code from Mifare Offline Cracker (MFOC) by Nethemba, cheers guys! :)
-
-int nested_auth(uint32_t uid, uint64_t known_key, uint8_t ab_key, uint8_t for_block, uint8_t target_block, uint8_t target_key, bool fp) {
-    uint64_t *pcs;
-
-    // Possible key counter, just continue with a previous "session"
-    uint8_t Nr[4] = {0x00, 0x00, 0x00, 0x00}; // Reader nonce
-    uint8_t Cmd[4] = {0x00, 0x00, 0x00, 0x00};
-
-    uint8_t ArEnc[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    uint8_t ArEncPar[8] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-
-    uint8_t Rx[MAX_FRAME_LEN]; // Tag response
-    uint8_t RxPar[MAX_FRAME_LEN]; // Tag response
-
-    uint32_t Nt;
-
-    uint8_t pbits = 0;
-    uint8_t p = 0;
-
-    int i;
-
-    // Prepare AUTH command
-    Cmd[0] = ab_key;
-    Cmd[1] = for_block;
-    iso14443a_crc_append(Cmd, 2);
-
-    // We need full control over the CRC
-    if (nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, false) < 0) {
-        nfc_perror(pnd, "nfc_device_set_property_bool crc");
-        return ERROR;
-    }
-
-    // Request plain tag-nonce
-    // TODO: Set NP_EASY_FRAMING option only once if possible
-    if (nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, false) < 0) {
-        nfc_perror(pnd, "nfc_device_set_property_bool framing");
-        return ERROR;
-    }
-
-    if (nfc_initiator_transceive_bytes(pnd, Cmd, 4, Rx, sizeof (Rx), 0) < 0) {
-        fprintf(stdout, "Error while requesting plain tag-nonce ");
-        return ERROR;
-    }
-
-    if (nfc_device_set_property_bool(pnd, NP_EASY_FRAMING, true) < 0) {
-        nfc_perror(pnd, "nfc_device_set_property_bool");
-        return ERROR;
-    }
-
-    // Save the tag nonce (Nt)
-    Nt = bytes_to_num(Rx, 4);
-
-    // Init the cipher with key {0..47} bits
-    pcs = (uint64_t *) crypto1_create(known_key);
-
-    // Load (plain) uid^nt into the cipher {48..79} bits
-    crypto1_word((struct Crypto1State*) pcs, bytes_to_num(Rx, 4) ^ uid, 0);
-
-    // Generate (encrypted) nr+parity by loading it into the cipher
-    for (i = 0; i < 4; i++) {
-        // Load in, and encrypt the reader nonce (Nr)
-        ArEnc[i] = crypto1_byte((struct Crypto1State*) pcs, Nr[i], 0) ^ Nr[i];
-        ArEncPar[i] = filter(*pcs) ^ oddparity(Nr[i]);
-    }
-
-    // Skip 32 bits in the pseudo random generator
-    Nt = prng_successor(Nt, 32);
-
-    // Generate reader-answer from tag-nonce
-    for (i = 4; i < 8; i++) {
-        // Get the next random byte
-        Nt = prng_successor(Nt, 8);
-        // Encrypt the reader-answer (Nt' = suc2(Nt))
-        ArEnc[i] = crypto1_byte((struct Crypto1State*) pcs, 0x00, 0) ^(Nt & 0xff);
-        ArEncPar[i] = filter(*pcs) ^ oddparity(Nt);
-    }
-
-    // Finally we want to send arbitrary parity bits
-    if (nfc_device_set_property_bool(pnd, NP_HANDLE_PARITY, false) < 0) {
-        nfc_perror(pnd, "nfc_device_set_property_bool parity ");
-        return 1;
-    }
-
-    // Transmit reader-answer
-    int res;
-    if (((res = nfc_initiator_transceive_bits(pnd, ArEnc, 64, ArEncPar, Rx, sizeof (Rx), RxPar)) < 0) || (res != 32)) {
-        fprintf(stderr, "Reader-answer transfer error, exiting.. ");
-        return KEY_WRONG;
-    }
-
-    // Decrypt the tag answer and verify that suc3(Nt) is At
-    Nt = prng_successor(Nt, 32);
-
-    if (!((crypto1_word((struct Crypto1State*) pcs, 0x00, 0) ^ bytes_to_num(Rx, 4)) == (Nt & 0xFFFFFFFF))) {
-        fprintf(stderr, "[At] is not Suc3(Nt), something is wrong, exiting.. ");
-        return ERROR;
-    }
-
-    Cmd[0] = target_key;
-    Cmd[1] = target_block;
-    iso14443a_crc_append(Cmd, 2);
-
-    for (i = 0; i < 4; i++) {
-        ArEnc[i] = crypto1_byte((struct Crypto1State*) pcs, 0, 0) ^ Cmd[i];
-        ArEncPar[i] = filter(*pcs) ^ oddparity(Cmd[i]);
-    }
-    if (((res = nfc_initiator_transceive_bits(pnd, ArEnc, 32, ArEncPar, Rx, sizeof (Rx), RxPar)) < 0) || (res != 32)) {
-        fprintf(stderr, "Reader-answer transfer error, exiting.. ");
-        return ERROR;
-    }
-
-    if (fp) {
-        for (i = 0; i < 4; i++) {
-            p = oddparity(Rx[i]);
-            //            fprintf(fp,"%02x", Rx[i]);
-            if (RxPar[i] != oddparity(Rx[i])) {
-                //                fprintf(fp,"! ");
-                p ^= 1;
-            }
-            //            else {
-            //                fprintf(fp,"  ");
-            //            }
-            pbits <<= 1;
-            pbits |= p;
-        }
-        num_acquired_nonces += add_nonce(bytes_to_num(Rx, 4), pbits);
-        //        fprintf(fp, "\n");
-    }
-    //    if(nonces){
-    //        nonces[nonces_collected] = 0;
-    //        for(i = 0; i < 4; i++){
-    //            nonces[nonces_collected] |= ((uint64_t) Rx[i]) << (8*i);
-    //            nonces[nonces_collected] |= ((uint64_t) !RxPar[i]) << (32 + (8*i));
-    //        }
-    //        nonces_collected++;
-    //    }
-
-    crypto1_destroy((struct Crypto1State*) pcs);
-    return OK;
-}
 
 // Sectors 0 to 31 have 4 blocks per sector.
 // Sectors 32 to 39 have 16 blocks per sector.
@@ -1394,155 +1240,69 @@ uint8_t block_to_sector(uint8_t block) {
 static int acquire_nonces(uint8_t blockNo, uint8_t keyType, uint8_t *key, uint8_t trgBlockNo, uint8_t trgKeyType) {
     last_sample_clock = msclock();
     sample_period = 2000; // initial rough estimate. Will be refined.
-    bool initialize = true;
-    bool field_off = false;
     hardnested_stage = CHECK_1ST_BYTES;
     bool acquisition_completed = false;
-    uint32_t flags = 0;
     //	uint32_t total_num_nonces = 0;
     float brute_force;
     bool reported_suma8 = false;
 
     num_acquired_nonces = 0;
-    
-    
+
+
     int e_sector = blockNo / 4;
     int a_sector = trgBlockNo / 4;
     pKeys pk = {NULL, 0};
     bool dumpKeysA = (trgKeyType == MC_AUTH_A ? true : false);
-//            
+    //            
     uint32_t enc_bytes = 0;
     uint8_t parbits = 0;
-    
 
-    //	clearCommandBuffer();
+
+    mf_configure(r.pdi);
 
     do {
-        flags = 0;
-        flags |= initialize ? 0x0001 : 0;
-        flags |= field_off ? 0x0004 : 0;
-        //		UsbCommand c = {CMD_MIFARE_ACQUIRE_ENCRYPTED_NONCES, {blockNo + keyType * 0x100, trgBlockNo + trgKeyType * 0x100, flags}};
-        //		memcpy(c.d.asBytes, key, 6);
-
-        //		SendCommand(&c);
-
-        if (field_off) break;
-        
-        if (initialize) {
-            pnd = r.pdi;
-            target = t.nt;
-            cuid = t.authuid;
-            
-            nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, false);
-            // Let the reader only try once to find a tag
-            nfc_device_set_property_bool(pnd, NP_INFINITE_SELECT, false);
-            nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, true);
-            nfc_device_set_property_bool(pnd, NP_HANDLE_PARITY, true);
-            nfc_device_set_property_bool(pnd, NP_AUTO_ISO14443_4, false);
-
-            //                    uid = 0;
-
-            // Enable field so more power consuming cards can power themselves up
-            nfc_device_set_property_bool(pnd, NP_ACTIVATE_FIELD, true);
-            if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &target)) {
-                cuid = bytes_to_num(target.nti.nai.abtUid, target.nti.nai.szUidLen);
-            }
-
-            if (!cuid) {
-                fprintf(stderr, "No tag detected!\n");
-                // Disconnect from NFC device
-                nfc_close(pnd);
-                return 1;
-            }
-
-            known_key = bytes_to_num(key, 6);
-            //    known_key = 0;
-            for_block = blockNo;
-            ab_key = keyType;
-            target_block = trgBlockNo;
-            target_key = trgKeyType;
-            switch (nested_auth(cuid, known_key, ab_key, for_block, target_block, target_key, false)) {
-                case KEY_WRONG:
-                    printf("%012"PRIx64" doesn't look like the right key %s for block %u (sector %u)\n", known_key, ab_key == MC_AUTH_A ? "A" : "B", for_block, block_to_sector(for_block));
-                    return 1;
-                case OK:
-                    break;
-                case ERROR:
-                default:
-                    printf("Some other error occurred.\n");
-                    break;
-            }
-            
-            mf_configure(r.pdi);
-            
-        }
-
-        if (!initialize) {
+        mf_anticollision(t, r);
 
 
-            
-//            nfc_device_set_property_bool(pnd, NP_HANDLE_CRC, true);
-//            nfc_device_set_property_bool(pnd, NP_HANDLE_PARITY, true);
-//            if (nfc_initiator_select_passive_target(pnd, nmMifare, NULL, 0, &target)) {
-//                mf_enhanced_auth(e_sector, a_sector, t, r, 0, &pk, 'h', dumpKeysA, &enc_bytes, &parbits);
-//                num_acquired_nonces += add_nonce(enc_bytes, parbits);
-//            } else {
-//                printf("Don't move the tag!\n");
-//                fflush(stdout);
-//            }
-            
+        mf_enhanced_auth(e_sector, a_sector, t, r, 0, &pk, 'h', dumpKeysA, &enc_bytes, &parbits);
+        num_acquired_nonces += add_nonce(enc_bytes, parbits);
+        mf_configure(r.pdi);
 
-//            mf_configure(r.pdi);
-            mf_anticollision(t, r);
-
-            
-            mf_enhanced_auth(e_sector, a_sector, t, r, 0, &pk, 'h', dumpKeysA, &enc_bytes, &parbits);
-            num_acquired_nonces += add_nonce(enc_bytes, parbits);
-//            nested_auth(cuid, known_key, ab_key, for_block, target_block, target_key, true);
-            mf_configure(r.pdi);
-
-            if (first_byte_num == 256) {
-                if (hardnested_stage == CHECK_1ST_BYTES) {
-                    for (uint16_t i = 0; i < NUM_SUMS; i++) {
-                        if (first_byte_Sum == sums[i]) {
-                            first_byte_Sum = i;
-                            break;
-                        }
+        if (first_byte_num == 256) {
+            if (hardnested_stage == CHECK_1ST_BYTES) {
+                for (uint16_t i = 0; i < NUM_SUMS; i++) {
+                    if (first_byte_Sum == sums[i]) {
+                        first_byte_Sum = i;
+                        break;
                     }
-                    hardnested_stage |= CHECK_2ND_BYTES;
-                    apply_sum_a0();
                 }
-                update_nonce_data(true);
-                acquisition_completed = shrink_key_space(&brute_force);
-                if (!reported_suma8) {
-                    char progress_string[80];
-                    sprintf(progress_string, "Apply Sum property. Sum(a0) = %d", sums[first_byte_Sum]);
-                    hardnested_print_progress(num_acquired_nonces, progress_string, brute_force, 0, trgBlockNo, trgKeyType);
-                    reported_suma8 = true;
-                } else {
-                    hardnested_print_progress(num_acquired_nonces, "Apply bit flip properties", brute_force, 0, trgBlockNo, trgKeyType);
-                }
-            } else {
-                update_nonce_data(true);
-                acquisition_completed = shrink_key_space(&brute_force);
-                hardnested_print_progress(num_acquired_nonces, "Apply bit flip properties", brute_force, 0, trgBlockNo, trgKeyType);
+                hardnested_stage |= CHECK_2ND_BYTES;
+                apply_sum_a0();
             }
+            update_nonce_data(true);
+            acquisition_completed = shrink_key_space(&brute_force);
+            if (!reported_suma8) {
+                char progress_string[80];
+                sprintf(progress_string, "Apply Sum property. Sum(a0) = %d", sums[first_byte_Sum]);
+                hardnested_print_progress(num_acquired_nonces, progress_string, brute_force, 0, trgBlockNo, trgKeyType, true);
+                reported_suma8 = true;
+            } else {
+                hardnested_print_progress(num_acquired_nonces, "Apply bit flip properties", brute_force, 0, trgBlockNo, trgKeyType, false);
+            }
+        } else {
+            update_nonce_data(true);
+            acquisition_completed = shrink_key_space(&brute_force);
+            hardnested_print_progress(num_acquired_nonces, "Apply bit flip properties", brute_force, 0, trgBlockNo, trgKeyType, false);
         }
-
-        if (acquisition_completed) {
-            field_off = true; // switch off field with next SendCommand and then finish
-        }
-
-        initialize = false;
 
         if (msclock() - last_sample_clock < sample_period) {
             sample_period = msclock() - last_sample_clock;
         }
         last_sample_clock = msclock();
 
-    } while (!acquisition_completed || field_off);
+    } while (!acquisition_completed);
 
-    
+
     return 0;
 }
 
@@ -1735,12 +1495,12 @@ static void add_matching_states(statelist_t *candidates, uint8_t part_sum_a0, ui
     uint32_t worstcase_size = 1 << 20;
     candidates->states[odd_even] = (uint32_t *) malloc(sizeof (uint32_t) * worstcase_size);
     if (candidates->states[odd_even] == NULL) {
-        PrintAndLog("Out of memory error in add_matching_states() - statelist.\n");
+        PrintAndLog(true, "Out of memory error in add_matching_states() - statelist.\n");
         exit(4);
     }
     uint32_t *candidates_bitarray = (uint32_t *) malloc_bitarray(sizeof (uint32_t) * (1 << 19));
     if (candidates_bitarray == NULL) {
-        PrintAndLog("Out of memory error in add_matching_states() - bitarray.\n");
+        PrintAndLog(true, "Out of memory error in add_matching_states() - bitarray.\n");
         free(candidates->states[odd_even]);
         exit(4);
     }
@@ -1800,7 +1560,7 @@ static void add_bitflip_candidates(uint8_t byte) {
         uint32_t worstcase_size = nonces[byte].num_states_bitarray[odd_even] + 1;
         candidates->states[odd_even] = (uint32_t *) malloc(sizeof (uint32_t) * worstcase_size);
         if (candidates->states[odd_even] == NULL) {
-            PrintAndLog("Out of memory error in add_bitflip_candidates().\n");
+            PrintAndLog(true, "Out of memory error in add_bitflip_candidates().\n");
             exit(4);
         }
 
@@ -1845,14 +1605,14 @@ static bool TestIfKeyExists(uint64_t key) {
         }
         if (found_odd && found_even) {
             num_keys_tested += count;
-            hardnested_print_progress(num_acquired_nonces, "(Test: Key found)", 0.0, 0, 0, 0);
+            hardnested_print_progress(num_acquired_nonces, "(Test: Key found)", 0.0, 0, 0, 0, true);
             crypto1_destroy(pcs);
             return true;
         }
     }
 
     num_keys_tested += count;
-    hardnested_print_progress(num_acquired_nonces, "(Test: Key NOT found)", 0.0, 0, 0, 0);
+    hardnested_print_progress(num_acquired_nonces, "(Test: Key NOT found)", 0.0, 0, 0, 0, true);
 
     crypto1_destroy(pcs);
     return false;
@@ -2073,7 +1833,7 @@ static void generate_candidates(uint8_t sum_a0_idx, uint8_t sum_a8_idx) {
     }
     update_expected_brute_force(best_first_bytes[0]);
 
-    hardnested_print_progress(num_acquired_nonces, "Apply Sum(a8) and all bytes bitflip properties", nonces[best_first_bytes[0]].expected_num_brute_force, 0, 0, 0);
+    hardnested_print_progress(num_acquired_nonces, "Apply Sum(a8) and all bytes bitflip properties", nonces[best_first_bytes[0]].expected_num_brute_force, 0, 0, 0, true);
 }
 
 static void free_candidates_memory(statelist_t *sl) {
@@ -2178,19 +1938,22 @@ static void set_test_state(uint8_t byte) {
 
 int mfnestedhard(uint8_t blockNo, uint8_t keyType, uint8_t *key, uint8_t trgBlockNo, uint8_t trgKeyType) {
     char progress_text[80];
+    
+    //Critical init
+    cuid = t.authuid;
 
     char instr_set[12] = {0};
     get_SIMD_instruction_set(instr_set);
-    PrintAndLog("Using %s SIMD core.", instr_set);
+    PrintAndLog(true, "Using %s SIMD core.", instr_set);
 
     srand((unsigned) time(NULL));
     brute_force_per_second = brute_force_benchmark();
     write_stats = false;
-    
+
     start_time = msclock();
     print_progress_header();
     sprintf(progress_text, "Brute force benchmark: %1.0f million (2^%1.1f) keys/s", brute_force_per_second / 1000000, log(brute_force_per_second) / log(2.0));
-    hardnested_print_progress(0, progress_text, (float) (1LL << 47), 0, 0, 0);
+    hardnested_print_progress(0, progress_text, (float) (1LL << 47), 0, 0, 0, true);
     init_bitflip_bitarrays();
     init_part_sum_bitarrays();
     init_sum_bitarrays();
@@ -2210,7 +1973,7 @@ int mfnestedhard(uint8_t blockNo, uint8_t keyType, uint8_t *key, uint8_t trgBloc
     }
 
     known_target_key = -1;
-    
+
 
     Tests();
 
@@ -2222,7 +1985,7 @@ int mfnestedhard(uint8_t blockNo, uint8_t keyType, uint8_t *key, uint8_t trgBloc
     float expected_brute_force1 = (float) num_odd * num_even / 2.0;
     float expected_brute_force2 = nonces[best_first_bytes[0]].expected_num_brute_force;
     if (expected_brute_force1 < expected_brute_force2) {
-        hardnested_print_progress(num_acquired_nonces, "(Ignoring Sum(a8) properties)", expected_brute_force1, 0, trgBlockNo, trgKeyType);
+        hardnested_print_progress(num_acquired_nonces, "(Ignoring Sum(a8) properties)", expected_brute_force1, 0, trgBlockNo, trgKeyType, true);
         set_test_state(best_first_byte_smallest_bitarray);
         add_bitflip_candidates(best_first_byte_smallest_bitarray);
         Tests2();
@@ -2234,7 +1997,7 @@ int mfnestedhard(uint8_t blockNo, uint8_t keyType, uint8_t *key, uint8_t trgBloc
         best_first_bytes[0] = best_first_byte_smallest_bitarray;
         pre_XOR_nonces();
         prepare_bf_test_nonces(nonces, best_first_bytes[0]);
-        hardnested_print_progress(num_acquired_nonces, "Starting brute force...", expected_brute_force1, 0, trgBlockNo, trgKeyType);
+        hardnested_print_progress(num_acquired_nonces, "Starting brute force...", expected_brute_force1, 0, trgBlockNo, trgKeyType, true);
         key_found = brute_force(trgBlockNo, trgKeyType);
         free(candidates->states[ODD_STATE]);
         free(candidates->states[EVEN_STATE]);
@@ -2246,15 +2009,15 @@ int mfnestedhard(uint8_t blockNo, uint8_t keyType, uint8_t *key, uint8_t trgBloc
         for (uint8_t j = 0; j < NUM_SUMS && !key_found; j++) {
             float expected_brute_force = nonces[best_first_bytes[0]].expected_num_brute_force;
             sprintf(progress_text, "(%d. guess: Sum(a8) = %" PRIu16 ")", j + 1, sums[nonces[best_first_bytes[0]].sum_a8_guess[j].sum_a8_idx]);
-            hardnested_print_progress(num_acquired_nonces, progress_text, expected_brute_force, 0, trgBlockNo, trgKeyType);
-//            if (trgkey != NULL && sums[nonces[best_first_bytes[0]].sum_a8_guess[j].sum_a8_idx] != real_sum_a8) {
-//                sprintf(progress_text, "(Estimated Sum(a8) is WRONG! Correct Sum(a8) = %" PRIu16 ")", real_sum_a8);
-//                hardnested_print_progress(num_acquired_nonces, progress_text, expected_brute_force, 0);
-//            }
+            hardnested_print_progress(num_acquired_nonces, progress_text, expected_brute_force, 0, trgBlockNo, trgKeyType, true);
+            //            if (trgkey != NULL && sums[nonces[best_first_bytes[0]].sum_a8_guess[j].sum_a8_idx] != real_sum_a8) {
+            //                sprintf(progress_text, "(Estimated Sum(a8) is WRONG! Correct Sum(a8) = %" PRIu16 ")", real_sum_a8);
+            //                hardnested_print_progress(num_acquired_nonces, progress_text, expected_brute_force, 0);
+            //            }
             // printf("Estimated remaining states: %" PRIu64 " (2^%1.1f)\n", nonces[best_first_bytes[0]].sum_a8_guess[j].num_states, log(nonces[best_first_bytes[0]].sum_a8_guess[j].num_states)/log(2.0));
             generate_candidates(first_byte_Sum, nonces[best_first_bytes[0]].sum_a8_guess[j].sum_a8_idx);
             // printf("Time for generating key candidates list: %1.0f sec (%1.1f sec CPU)\n", difftime(time(NULL), start_time), (float)(msclock() - start_clock)/1000.0);
-            hardnested_print_progress(num_acquired_nonces, "Starting brute force...", expected_brute_force, 0, trgBlockNo, trgKeyType);
+            hardnested_print_progress(num_acquired_nonces, "Starting brute force...", expected_brute_force, 0, trgBlockNo, trgKeyType, true);
             key_found = brute_force(trgBlockNo, trgKeyType);
             free_statelist_cache();
             free_candidates_memory(candidates);

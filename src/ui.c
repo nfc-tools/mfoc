@@ -11,50 +11,45 @@
 
 #include <stdbool.h>
 #ifndef EXTERNAL_PRINTANDLOG
-#include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include <readline/readline.h>
 #include <pthread.h>
 #endif
 
 #include "ui.h"
 
-double CursorScaleFactor = 1;
-int PlotGridX = 0, PlotGridY = 0, PlotGridXdefault = 64, PlotGridYdefault = 64, CursorCPos = 0, CursorDPos = 0;
-bool flushAfterWrite = false; //buzzy
-int GridOffset = 0;
-bool GridLocked = false;
-bool showDemod = true;
+bool lastnewl = true;
 
 #ifndef EXTERNAL_PRINTANDLOG
 static pthread_mutex_t print_lock = PTHREAD_MUTEX_INITIALIZER;
 
-void PrintAndLog(char *fmt, ...) {
+void PrintAndLog(bool newl, char *fmt, ...) {
     va_list argptr, argptr2;
 
     // lock this section to avoid interlacing prints from different threads
     pthread_mutex_lock(&print_lock);
-
+    
+    if (newl) {
+        printf("\n");
+    } else {
+        if (lastnewl)
+            printf("\n");
+        
+        printf("\r");
+    }
     va_start(argptr, fmt);
     va_copy(argptr2, argptr);
     vprintf(fmt, argptr);
     printf("          "); // cleaning prompt
     va_end(argptr);
-    printf("\n");
-
+        
     va_end(argptr2);
 
-    if (flushAfterWrite) //buzzy
-    {
-        fflush(NULL);
-    }
+    fflush(NULL);
+    lastnewl = newl;
+
     //release lock
     pthread_mutex_unlock(&print_lock);
 }
 #endif
-
-void SetFlushAfterWrite(bool flush_after_write) {
-    flushAfterWrite = flush_after_write;
-}
 
