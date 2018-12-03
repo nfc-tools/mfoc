@@ -298,21 +298,22 @@ static void init_bitflip_bitarrays(void) {
                 lzma_init_inflate(&strm, p.input_buffer, p.len, (uint8_t *) & count, sizeof (count));
                 //				inflate(&compressed_stream, Z_SYNC_FLUSH);
                 if ((float) count / (1 << 24) < IGNORE_BITFLIP_THRESHOLD) {
-                    uint32_t *bitset = (uint32_t *) malloc_bitarray(sizeof (uint32_t) * (1 << 19));
-                    if (bitset == NULL) {
-                        printf("Out of memory error in init_bitflip_statelists(). Aborting...\n");
-                        //						inflateEnd(&compressed_stream);
-                        lzma_end(&strm);
-                        exit(4);
-                    }
+//                    uint32_t *bitset = (uint32_t *) malloc_bitarray(sizeof (uint32_t) * (1 << 19));
+//                    if (bitset == NULL) {
+//                        printf("Out of memory error in init_bitflip_statelists(). Aborting...\n");
+//                        //						inflateEnd(&compressed_stream);
+//                        lzma_end(&strm);
+//                        exit(4);
+//                    }
                     //					compressed_stream.next_out = (uint8_t *)bitset;
                     //					compressed_stream.avail_out = sizeof(uint32_t) * (1<<19);
                     //					inflate(&compressed_stream, Z_SYNC_FLUSH);
-                    lzma_init_inflate(&strm, p.input_buffer, p.len, (uint8_t *) bitset, sizeof (uint32_t) * (1 << 19));
+//                    lzma_init_inflate(&strm, p.input_buffer, p.len, (uint8_t *) bitset, sizeof (uint32_t) * (1 << 19));
                     //                                        bitset++; //ignore first 4 bytes
                     effective_bitflip[odd_even][num_effective_bitflips[odd_even]++] = bitflip;
-                    bitflip_bitarrays[odd_even][bitflip] = bitset;
-                    bitflip_bitarrays[odd_even][bitflip]++;
+//                    bitflip_bitarrays[odd_even][bitflip] = bitset;
+//                    bitflip_bitarrays[odd_even][bitflip]++;
+                    bitflip_bitarrays[odd_even][bitflip] = &count; //Something not null
                     count_bitflip_bitarrays[odd_even][bitflip] = count;
 #if defined (DEBUG_REDUCTION)
                     printf("(%03" PRIx16 " %s:%5.1f%%) ", bitflip, odd_even ? "odd " : "even", (float) count / (1 << 24)*100.0);
@@ -371,14 +372,14 @@ static void init_bitflip_bitarrays(void) {
 
 static void free_bitflip_bitarrays(void) {
 
-    for (odd_even_t odd_even = EVEN_STATE; odd_even <= ODD_STATE; odd_even++) {
-        for (uint16_t bitflip = 0x001; bitflip < 0x400; bitflip++) {
-            if (bitflip_bitarrays[odd_even][bitflip] != NULL) {
-                bitflip_bitarrays[odd_even][bitflip]--;
-                free_bitarray(bitflip_bitarrays[odd_even][bitflip]);
-            }
-        }
-    }
+//    for (odd_even_t odd_even = EVEN_STATE; odd_even <= ODD_STATE; odd_even++) {
+//        for (uint16_t bitflip = 0x001; bitflip < 0x400; bitflip++) {
+//            if (bitflip_bitarrays[odd_even][bitflip] != NULL) {
+//                bitflip_bitarrays[odd_even][bitflip]--;
+//                free_bitarray(bitflip_bitarrays[odd_even][bitflip]);
+//            }
+//        }
+//    }
 }
 
 
@@ -1073,6 +1074,8 @@ __attribute__((force_align_arg_pointer))
     uint8_t first_byte = ((uint8_t *) args)[0];
     uint8_t last_byte = ((uint8_t *) args)[1];
     uint8_t time_budget = ((uint8_t *) args)[2];
+    
+//    lzma_stream strm = LZMA_STREAM_INIT;
 
     if (hardnested_stage & CHECK_1ST_BYTES) {
         // for (uint16_t bitflip = 0x001; bitflip < 0x200; bitflip++) {
@@ -1095,10 +1098,28 @@ __attribute__((force_align_arg_pointer))
                         for (odd_even_t odd_even = EVEN_STATE; odd_even <= ODD_STATE; odd_even++) {
                             if (bitflip_bitarrays[odd_even][bitflip] != NULL) {
                                 uint32_t old_count = nonces[i].num_states_bitarray[odd_even];
-                                nonces[i].num_states_bitarray[odd_even] = count_bitarray_AND(nonces[i].states_bitarray[odd_even], bitflip_bitarrays[odd_even][bitflip]);
+                                
+                                lzma_stream strm = LZMA_STREAM_INIT;
+                                uint32_t *bitset = (uint32_t *) malloc_bitarray(sizeof (uint32_t) * (1 << 19));
+                                if (bitset == NULL) {
+                                    printf("Out of memory error in check_for_BitFlipProperties_thread(). Aborting...\n");
+                                    //						inflateEnd(&compressed_stream);
+                                    lzma_end(&strm);
+                                    exit(4);
+                                }
+                                bitflip_info p = get_bitflip(odd_even, bitflip);
+                                lzma_init_inflate(&strm, p.input_buffer, p.len, (uint8_t *) bitset, sizeof (uint32_t) * (1 << 19));
+                                bitset++;
+                                
+                                nonces[i].num_states_bitarray[odd_even] = count_bitarray_AND(nonces[i].states_bitarray[odd_even], bitset);
                                 if (nonces[i].num_states_bitarray[odd_even] != old_count) {
                                     nonces[i].all_bitflips_dirty[odd_even] = true;
                                 }
+                                
+                                bitset--;
+                                free_bitarray(bitset);
+                                lzma_end(&strm);
+                                
                                 // printf("bitflip: %d old: %d, new: %d ", bitflip, old_count, nonces[i].num_states_bitarray[odd_even]);
                             }
                         }
@@ -1135,10 +1156,28 @@ __attribute__((force_align_arg_pointer))
                                 for (odd_even_t odd_even = EVEN_STATE; odd_even <= ODD_STATE; odd_even++) {
                                     if (bitflip_bitarrays[odd_even][bitflip] != NULL) {
                                         uint32_t old_count = nonces[i].num_states_bitarray[odd_even];
-                                        nonces[i].num_states_bitarray[odd_even] = count_bitarray_AND(nonces[i].states_bitarray[odd_even], bitflip_bitarrays[odd_even][bitflip]);
+                                        
+                                        lzma_stream strm = LZMA_STREAM_INIT;
+                                        uint32_t *bitset = (uint32_t *) malloc_bitarray(sizeof (uint32_t) * (1 << 19));
+                                        if (bitset == NULL) {
+                                            printf("Out of memory error in check_for_BitFlipProperties_thread(). Aborting...\n");
+                                            //						inflateEnd(&compressed_stream);
+                                            lzma_end(&strm);
+                                            exit(4);
+                                        }
+                                        bitflip_info p = get_bitflip(odd_even, bitflip);
+                                        lzma_init_inflate(&strm, p.input_buffer, p.len, (uint8_t *) bitset, sizeof (uint32_t) * (1 << 19));
+                                        bitset++;
+                                        
+                                        nonces[i].num_states_bitarray[odd_even] = count_bitarray_AND(nonces[i].states_bitarray[odd_even], bitset);
                                         if (nonces[i].num_states_bitarray[odd_even] != old_count) {
                                             nonces[i].all_bitflips_dirty[odd_even] = true;
                                         }
+                                        
+                                        bitset--;
+                                        free_bitarray(bitset);
+                                        lzma_end(&strm);
+                                        
                                     }
                                 }
                                 break;
@@ -1152,6 +1191,7 @@ __attribute__((force_align_arg_pointer))
         }
     }
 
+//    lzma_end(&strm);
     return NULL;
 }
 
