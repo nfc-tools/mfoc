@@ -132,13 +132,18 @@ int main(int argc, char *const argv[])
   char line[20];
   char * read;
   
+  bool do_clear=false;
   //Regexp declarations
   static const char *regex = "([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
   struct slre_cap caps[2];  
 
   // Parse command line arguments
-  while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:t:f:")) != -1) {
+  while ((ch = getopt(argc, argv, "hCD:s:BP:T:S:O:k:t:f")) != -1) {
     switch (ch) {
+      case 'C':
+        defKeys=malloc(0);
+        defKeys_len=0;
+        break;
       case 'P':
         // Number of probes
         if (!(probes = atoi(optarg)) || probes < 1) {
@@ -771,10 +776,11 @@ error:
 
 void usage(FILE *stream, int errno)
 {
-  fprintf(stream, "Usage: mfoc [-h] [-k key] [-f file] ... [-P probnum] [-T tolerance] [-O output]\n");
+  fprintf(stream, "Usage: mfoc [-h] [-C] [-k key] [-f file] ... [-P probnum] [-T tolerance] [-O output]\n");
   fprintf(stream, "\n");
   fprintf(stream, "  h     print this help and exit\n");
 //    fprintf(stream, "  B     instead of 'A' dump 'B' keys\n");
+  fprintf(stream, "  C     skip testing default keys\n");
   fprintf(stream, "  k     try the specified key in addition to the default keys\n");
   fprintf(stream, "  f     parses a file of keys to add in addition to the default keys \n");    
 //    fprintf(stream, "  D     number of distance probes, default is 20\n");
