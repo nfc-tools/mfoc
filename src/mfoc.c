@@ -132,7 +132,7 @@ int main(int argc, char *const argv[])
   char line[20];
   char * read;
 
-  bool do_clear=false;
+  bool use_default_key=true;
   //Regexp declarations
   static const char *regex = "([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
   struct slre_cap caps[2];  
@@ -141,8 +141,7 @@ int main(int argc, char *const argv[])
   while ((ch = getopt(argc, argv, "hCD:s:BP:T:S:O:k:t:f")) != -1) {
     switch (ch) {
       case 'C':
-        defKeys=malloc(0);
-        defKeys_len=0;
+        use_default_key=false;
         break;
       case 'P':
         // Number of probes
@@ -349,6 +348,9 @@ int main(int argc, char *const argv[])
   memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
   // Iterate over all keys (n = number of keys)
   n = sizeof(defaultKeys) / sizeof(defaultKeys[0]);
+  if (!use_default_key) {
+    n=0;
+  }
   size_t defKey_bytes_todo = defKeys_len;
   key = 0;
   while (key < n || defKey_bytes_todo) {
