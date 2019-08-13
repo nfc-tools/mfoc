@@ -345,6 +345,28 @@ int main(int argc, char *const argv[])
   fprintf(stdout, "\nTry to authenticate to all sectors with default keys...\n");
   fprintf(stdout, "Symbols: '.' no key found, '/' A key found, '\\' B key found, 'x' both keys found\n");
   // Set the authentication information (uid)
+  bool did_hardnested=false;
+  check_keys:
+  if (did_hardnested) {
+    printf("\nChecking for key reuse...\n");
+    int i=0;
+    defKeys_len=0;
+    free(defKeys);
+    defKeys=malloc(0);
+    for (int i=0;i<t.num_sectors;++i) {
+      if (t.sectors[i].foundKeyA) {
+        defKeys=realloc(defKeys,defKeys_len+6);
+        memcpy(defKeys+defKeys_len,t.sectors[i].KeyA,6);
+        defKeys_len+=6;
+      }
+      if (t.sectors[i].foundKeyB) {
+        defKeys=realloc(defKeys,defKeys_len+6);
+        memcpy(defKeys+defKeys_len,t.sectors[i].KeyB,6);
+        defKeys_len+=6;
+      }
+    }
+  }
+
   memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
   // Iterate over all keys (n = number of keys)
   n = sizeof(defaultKeys) / sizeof(defaultKeys[0]);
@@ -557,6 +579,8 @@ int main(int argc, char *const argv[])
             uint8_t trgBlockNo = j * 4; //block
             uint8_t trgKeyType = (dumpKeysA ? MC_AUTH_A : MC_AUTH_B);
             mfnestedhard(blockNo, keyType, key, trgBlockNo, trgKeyType);
+            did_hardnested=true;
+            goto check_keys;
         } else {
             //Nested attack
             // Max probes for auth for each sector
