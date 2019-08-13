@@ -131,7 +131,7 @@ int main(int argc, char *const argv[])
   FILE * fp;
   char line[20];
   char * read;
-  
+
   bool do_clear=false;
   //Regexp declarations
   static const char *regex = "([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
@@ -187,7 +187,7 @@ int main(int argc, char *const argv[])
               j += i;
             }
         }
-      break;      
+      break;
       case 'k':
         // Add this key to the default keys
         p = realloc(defKeys, defKeys_len + 6);
@@ -227,10 +227,10 @@ int main(int argc, char *const argv[])
     }
   }
 
-  if (!pfDump) {
-    ERR("parameter -O is mandatory");
-    exit(EXIT_FAILURE);
-  }
+  // if (!pfDump) {
+  //   ERR("parameter -O is mandatory");
+  //   exit(EXIT_FAILURE);
+  // }
 
   // Initialize reader/tag structures
   mf_init(&r);
@@ -748,13 +748,15 @@ int main(int argc, char *const argv[])
     }
 
     // Finally save all keys + data to file
-    uint16_t dump_size = (t.num_blocks + 1) * 16;
-    if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
-      fprintf(stdout, "Error, cannot write dump\n");
+    if (pfDump) {
+      uint16_t dump_size = (t.num_blocks + 1) * 16;
+      if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
+        fprintf(stdout, "Error, cannot write dump\n");
+        fclose(pfDump);
+        goto error;
+      }
       fclose(pfDump);
-      goto error;
     }
-    fclose(pfDump);
   }
 
   free(t.sectors);
@@ -788,7 +790,7 @@ void usage(FILE *stream, int errno)
   fprintf(stream, "  P     number of probes per sector, instead of default of 20\n");
   fprintf(stream, "  T     nonce tolerance half-range, instead of default of 20\n        (i.e., 40 for the total range, in both directions)\n");
 //    fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
-  fprintf(stream, "  O     file in which the card contents will be written (REQUIRED)\n");
+  fprintf(stream, "  O     file in which the card contents will be written\n");
   fprintf(stream, "  D     file in which partial card info will be written in case PRNG is not vulnerable\n");
   fprintf(stream, "\n");
   fprintf(stream, "Example: mfoc -O mycard.mfd\n");
