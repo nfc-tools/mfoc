@@ -923,7 +923,13 @@ int find_exploit_sector(mftag t)
     return -1;
   }
   for (i = t.num_sectors-1; i>=0;--i) {
-    if ((t.sectors[i].foundKeyA) || (t.sectors[i].foundKeyB)) {
+    if (t.sectors[i].foundKeyB) {
+      fprintf(stdout, "\n\nUsing sector %02d as an exploit sector\n", i);
+      return i;
+    }
+  }
+  for (i = t.num_sectors-1; i>=0;--i) {
+    if (t.sectors[i].foundKeyA) {
       fprintf(stdout, "\n\nUsing sector %02d as an exploit sector\n", i);
       return i;
     }
