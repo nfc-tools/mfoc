@@ -73,6 +73,30 @@ uint32_t unknownSector = 0;
 char unknownKeyLetter = 'A';
 uint32_t unexpected_random = 0;
 
+
+// Sectors 0 to 31 have 4 blocks per sector.
+// Sectors 32 to 39 have 16 blocks per sector.
+
+uint8_t block_to_sector(uint8_t block)
+{
+    uint8_t sector;
+    if(block < 128) {
+        return block >> 2;
+    }
+    block -= 128;
+    return 32 + (block >> 4);
+}
+
+uint8_t sector_to_block(uint8_t sector)
+{
+  if (sector<32) {
+    return sector<<2;
+  }
+  sector -= 32;
+
+  return 128+(sector<<4);
+}
+
 int main(int argc, char *const argv[])
 {
   int ch, i, k, n, j, m;
@@ -573,10 +597,10 @@ int main(int argc, char *const argv[])
             mf_configure(r.pdi);
             mf_anticollision(t, r);
             
-            uint8_t blockNo = e_sector * 4; //Block
+            uint8_t blockNo = sector_to_block(e_sector); //Block
             uint8_t keyType = (t.sectors[e_sector].foundKeyA ? MC_AUTH_A : MC_AUTH_B);
             uint8_t *key = (t.sectors[e_sector].foundKeyA ? t.sectors[e_sector].KeyA : t.sectors[e_sector].KeyB);;
-            uint8_t trgBlockNo = j * 4; //block
+            uint8_t trgBlockNo = sector_to_block(j); //block
             uint8_t trgKeyType = (dumpKeysA ? MC_AUTH_A : MC_AUTH_B);
             mfnestedhard(blockNo, keyType, key, trgBlockNo, trgKeyType);
             did_hardnested=true;
