@@ -932,11 +932,10 @@ int find_exploit_sector(mftag t)
     fprintf(stdout, "\nWe have all sectors encrypted with the default keys..\n\n");
     return -1;
   }
-  for (i = 0; i < t.num_sectors; i++) {
-    int s=(t.num_sectors-i)-1;
-    if ((t.sectors[s].foundKeyA) || (t.sectors[s].foundKeyB)) {
-      fprintf(stdout, "\n\nUsing sector %02d as an exploit sector\n", s);
-      return s;
+  for (i = t.num_sectors-1; i>=0;--i) {
+    if ((t.sectors[i].foundKeyA) || (t.sectors[i].foundKeyB)) {
+      fprintf(stdout, "\n\nUsing sector %02d as an exploit sector\n", i);
+      return i;
     }
   }
   ERR("\n\nNo sector encrypted with the default key has been found, exiting..");
