@@ -77,16 +77,6 @@ uint32_t unexpected_random = 0;
 // Sectors 0 to 31 have 4 blocks per sector.
 // Sectors 32 to 39 have 16 blocks per sector.
 
-uint8_t block_to_sector(uint8_t block)
-{
-    uint8_t sector;
-    if(block < 128) {
-        return block >> 2;
-    }
-    block -= 128;
-    return 32 + (block >> 4);
-}
-
 uint8_t sector_to_block(uint8_t sector)
 {
   if (sector<32) {
