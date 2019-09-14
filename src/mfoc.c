@@ -73,6 +73,20 @@ uint32_t unknownSector = 0;
 char unknownKeyLetter = 'A';
 uint32_t unexpected_random = 0;
 
+
+// Sectors 0 to 31 have 4 blocks per sector.
+// Sectors 32 to 39 have 16 blocks per sector.
+
+uint8_t sector_to_block(uint8_t sector)
+{
+  if (sector<32) {
+    return sector<<2;
+  }
+  sector -= 32;
+
+  return 128+(sector<<4);
+}
+
 int main(int argc, char *const argv[])
 {
   int ch, i, k, n, j, m;
@@ -131,14 +145,18 @@ int main(int argc, char *const argv[])
   FILE * fp;
   char line[20];
   char * read;
-  
+
+  bool use_default_key=true;
   //Regexp declarations
   static const char *regex = "([0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f])";
   struct slre_cap caps[2];  
 
   // Parse command line arguments
-  while ((ch = getopt(argc, argv, "hD:s:BP:T:S:O:k:t:f:")) != -1) {
+  while ((ch = getopt(argc, argv, "hCD:s:BP:T:S:O:k:t:f")) != -1) {
     switch (ch) {
+      case 'C':
+        use_default_key=false;
+        break;
       case 'P':
         // Number of probes
         if (!(probes = atoi(optarg)) || probes < 1) {
@@ -182,7 +200,7 @@ int main(int argc, char *const argv[])
               j += i;
             }
         }
-      break;      
+      break;
       case 'k':
         // Add this key to the default keys
         p = realloc(defKeys, defKeys_len + 6);
@@ -222,10 +240,10 @@ int main(int argc, char *const argv[])
     }
   }
 
-  if (!pfDump) {
-    ERR("parameter -O is mandatory");
-    exit(EXIT_FAILURE);
-  }
+  // if (!pfDump) {
+  //   ERR("parameter -O is mandatory");
+  //   exit(EXIT_FAILURE);
+  // }
 
   // Initialize reader/tag structures
   mf_init(&r);
@@ -341,9 +359,34 @@ int main(int argc, char *const argv[])
   fprintf(stdout, "\nTry to authenticate to all sectors with default keys...\n");
   fprintf(stdout, "Symbols: '.' no key found, '/' A key found, '\\' B key found, 'x' both keys found\n");
   // Set the authentication information (uid)
+  bool did_hardnested=false;
+  check_keys:
+  if (did_hardnested) {
+    printf("\nChecking for key reuse...\n");
+    int i=0;
+    defKeys_len=0;
+    free(defKeys);
+    defKeys=malloc(0);
+    for (int i=0;i<t.num_sectors;++i) {
+      if (t.sectors[i].foundKeyA) {
+        defKeys=realloc(defKeys,defKeys_len+6);
+        memcpy(defKeys+defKeys_len,t.sectors[i].KeyA,6);
+        defKeys_len+=6;
+      }
+      if (t.sectors[i].foundKeyB) {
+        defKeys=realloc(defKeys,defKeys_len+6);
+        memcpy(defKeys+defKeys_len,t.sectors[i].KeyB,6);
+        defKeys_len+=6;
+      }
+    }
+  }
+
   memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
   // Iterate over all keys (n = number of keys)
   n = sizeof(defaultKeys) / sizeof(defaultKeys[0]);
+  if (!use_default_key) {
+    n=0;
+  }
   size_t defKey_bytes_todo = defKeys_len;
   key = 0;
   while (key < n || defKey_bytes_todo) {
@@ -544,12 +587,14 @@ int main(int argc, char *const argv[])
             mf_configure(r.pdi);
             mf_anticollision(t, r);
             
-            uint8_t blockNo = e_sector * 4; //Block
+            uint8_t blockNo = sector_to_block(e_sector); //Block
             uint8_t keyType = (t.sectors[e_sector].foundKeyA ? MC_AUTH_A : MC_AUTH_B);
             uint8_t *key = (t.sectors[e_sector].foundKeyA ? t.sectors[e_sector].KeyA : t.sectors[e_sector].KeyB);;
-            uint8_t trgBlockNo = j * 4; //block
+            uint8_t trgBlockNo = sector_to_block(j); //block
             uint8_t trgKeyType = (dumpKeysA ? MC_AUTH_A : MC_AUTH_B);
             mfnestedhard(blockNo, keyType, key, trgBlockNo, trgKeyType);
+            did_hardnested=true;
+            goto check_keys;
         } else {
             //Nested attack
             // Max probes for auth for each sector
@@ -743,13 +788,15 @@ int main(int argc, char *const argv[])
     }
 
     // Finally save all keys + data to file
-    uint16_t dump_size = (t.num_blocks + 1) * 16;
-    if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
-      fprintf(stdout, "Error, cannot write dump\n");
+    if (pfDump) {
+      uint16_t dump_size = (t.num_blocks + 1) * 16;
+      if (fwrite(&mtDump, 1, dump_size, pfDump) != dump_size) {
+        fprintf(stdout, "Error, cannot write dump\n");
+        fclose(pfDump);
+        goto error;
+      }
       fclose(pfDump);
-      goto error;
     }
-    fclose(pfDump);
   }
 
   free(t.sectors);
@@ -771,10 +818,11 @@ error:
 
 void usage(FILE *stream, int errno)
 {
-  fprintf(stream, "Usage: mfoc [-h] [-k key] [-f file] ... [-P probnum] [-T tolerance] [-O output]\n");
+  fprintf(stream, "Usage: mfoc [-h] [-C] [-k key] [-f file] ... [-P probnum] [-T tolerance] [-O output]\n");
   fprintf(stream, "\n");
   fprintf(stream, "  h     print this help and exit\n");
 //    fprintf(stream, "  B     instead of 'A' dump 'B' keys\n");
+  fprintf(stream, "  C     skip testing default keys\n");
   fprintf(stream, "  k     try the specified key in addition to the default keys\n");
   fprintf(stream, "  f     parses a file of keys to add in addition to the default keys \n");    
 //    fprintf(stream, "  D     number of distance probes, default is 20\n");
@@ -782,7 +830,7 @@ void usage(FILE *stream, int errno)
   fprintf(stream, "  P     number of probes per sector, instead of default of 20\n");
   fprintf(stream, "  T     nonce tolerance half-range, instead of default of 20\n        (i.e., 40 for the total range, in both directions)\n");
 //    fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
-  fprintf(stream, "  O     file in which the card contents will be written (REQUIRED)\n");
+  fprintf(stream, "  O     file in which the card contents will be written\n");
   fprintf(stream, "  D     file in which partial card info will be written in case PRNG is not vulnerable\n");
   fprintf(stream, "\n");
   fprintf(stream, "Example: mfoc -O mycard.mfd\n");
@@ -874,8 +922,14 @@ int find_exploit_sector(mftag t)
     fprintf(stdout, "\nWe have all sectors encrypted with the default keys..\n\n");
     return -1;
   }
-  for (i = 0; i < t.num_sectors; i++) {
-    if ((t.sectors[i].foundKeyA) || (t.sectors[i].foundKeyB)) {
+  for (i = t.num_sectors-1; i>=0;--i) {
+    if (t.sectors[i].foundKeyB) {
+      fprintf(stdout, "\n\nUsing sector %02d as an exploit sector\n", i);
+      return i;
+    }
+  }
+  for (i = t.num_sectors-1; i>=0;--i) {
+    if (t.sectors[i].foundKeyA) {
       fprintf(stdout, "\n\nUsing sector %02d as an exploit sector\n", i);
       return i;
     }
