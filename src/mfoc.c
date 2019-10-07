@@ -152,7 +152,7 @@ int main(int argc, char *const argv[])
   struct slre_cap caps[2];  
 
   // Parse command line arguments
-  while ((ch = getopt(argc, argv, "hCD:s:BP:T:S:O:k:t:f")) != -1) {
+  while ((ch = getopt(argc, argv, "hCD:s:BP:T:S:O:k:t:f:")) != -1) {
     switch (ch) {
       case 'C':
         use_default_key=false;
