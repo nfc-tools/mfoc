@@ -597,6 +597,10 @@ int main(int argc, char *const argv[])
             goto check_keys;
         } else {
             //Nested attack
+            // DSR! - fix https://github.com/vk496/mfoc/issues/4
+            mf_configure(r.pdi);
+            mf_anticollision(t, r);
+          
             // Max probes for auth for each sector
             for (k = 0; k < probes; ++k) {
               // Try to authenticate to exploit sector and determine distances (filling denonce.distances)
