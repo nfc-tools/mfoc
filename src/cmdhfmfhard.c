@@ -1289,8 +1289,8 @@ static int acquire_nonces(uint8_t blockNo, uint8_t keyType, uint8_t *key, uint8_
     num_acquired_nonces = 0;
 
 
-    int e_sector = blockNo / 4;
-    int a_sector = trgBlockNo / 4;
+    int e_sector = block_to_sector(blockNo);
+    int a_sector = block_to_sector(trgBlockNo);
     pKeys pk = {NULL, 0};
     bool dumpKeysA = (trgKeyType == MC_AUTH_A ? true : false);
     //            
