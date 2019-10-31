@@ -362,21 +362,39 @@ int main(int argc, char *const argv[])
   bool did_hardnested=false;
   check_keys:
   if (did_hardnested) {
+    use_default_key=false;
     printf("\nChecking for key reuse...\n");
-    int i=0;
     defKeys_len=0;
     free(defKeys);
     defKeys=malloc(0);
     for (int i=0;i<t.num_sectors;++i) {
       if (t.sectors[i].foundKeyA) {
-        defKeys=realloc(defKeys,defKeys_len+6);
-        memcpy(defKeys+defKeys_len,t.sectors[i].KeyA,6);
-        defKeys_len+=6;
+        bool seen=false;
+        for (int k=0;k<defKeys_len;k+=6) {
+          if (memcmp(defKeys+k,t.sectors[i].KeyA,6)==0) {
+            seen=true;
+            break;
+          }
+        }
+        if (!seen) {
+          defKeys=realloc(defKeys,defKeys_len+6);
+          memcpy(defKeys+defKeys_len,t.sectors[i].KeyA,6);
+          defKeys_len+=6;
+        }
       }
       if (t.sectors[i].foundKeyB) {
-        defKeys=realloc(defKeys,defKeys_len+6);
-        memcpy(defKeys+defKeys_len,t.sectors[i].KeyB,6);
-        defKeys_len+=6;
+        bool seen=false;
+        for (int k=0;k<defKeys_len;k+=6) {
+          if (memcmp(defKeys+k,t.sectors[i].KeyB,6)==0) {
+            seen=true;
+            break;
+          }
+        }
+        if (!seen) {
+          defKeys=realloc(defKeys,defKeys_len+6);
+          memcpy(defKeys+defKeys_len,t.sectors[i].KeyB,6);
+          defKeys_len+=6;
+        }
       }
     }
   }
