@@ -1028,7 +1028,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
   // Prepare AUTH command
   Auth[0] = (t.sectors[e_sector].foundKeyA) ? MC_AUTH_A : MC_AUTH_B;
   if (mode == 'h') {
-    Auth[1] = e_sector * 4; //block
+    Auth[1] = sector_to_block(e_sector); //block
   }
   iso14443a_crc_append(Auth, 2);
   // fprintf(stdout, "\nAuth command:\t");
