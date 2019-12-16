@@ -36,7 +36,7 @@
 #include "hardnested/hardnested_bruteforce.h"
 #include "hardnested/hardnested_bf_core.h"
 #include "hardnested/hardnested_bitarray_core.h"
-#include <zlib.h>
+#include <unistd.h>
 #include "hardnested/tables.h"
 #include "nfc-utils.h"
 

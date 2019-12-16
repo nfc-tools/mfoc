@@ -121,6 +121,22 @@ typedef union {
 #define BITSLICE_TEST_NONCES bitslice_test_nonces_MMX
 #define CRACK_STATES_BITSLICED crack_states_bitsliced_MMX
 #else
+#define bitslice_test_nonces_AVX512 BITSLICE_TEST_NONCES
+#define crack_states_bitsliced_AVX512 CRACK_STATES_BITSLICED
+
+#define bitslice_test_nonces_AVX2 BITSLICE_TEST_NONCES
+#define crack_states_bitsliced_AVX2 CRACK_STATES_BITSLICED
+
+#define bitslice_test_nonces_AVX BITSLICE_TEST_NONCES
+#define crack_states_bitsliced_AVX CRACK_STATES_BITSLICED
+
+#define bitslice_test_nonces_SSE2 BITSLICE_TEST_NONCES
+#define crack_states_bitsliced_SSE2 CRACK_STATES_BITSLICED
+
+#define bitslice_test_nonces_MMX BITSLICE_TEST_NONCES
+#define crack_states_bitsliced_MMX CRACK_STATES_BITSLICED
+
+
 #define BITSLICE_TEST_NONCES bitslice_test_nonces_NOSIMD
 #define CRACK_STATES_BITSLICED crack_states_bitsliced_NOSIMD
 #endif

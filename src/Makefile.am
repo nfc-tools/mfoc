@@ -13,17 +13,7 @@ dist_man_MANS = mfoc.1
 #MULTIARCH = hardnested/hardnested_bf_core.c hardnested/hardnested_bitarray_core.c
 
 MULTIARCHOBJS = hardnested/hardnested_bf_core_NOSIMD.o \
-		hardnested/hardnested_bf_core_MMX.o \
-		hardnested/hardnested_bf_core_SSE2.o \
-		hardnested/hardnested_bf_core_AVX.o \
-		hardnested/hardnested_bf_core_AVX2.o \
-		hardnested/hardnested_bf_core_AVX512.o \
-		hardnested/hardnested_bitarray_core_NOSIMD.o \
-		hardnested/hardnested_bitarray_core_MMX.o \
-		hardnested/hardnested_bitarray_core_SSE2.o \
-		hardnested/hardnested_bitarray_core_AVX.o \
-		hardnested/hardnested_bitarray_core_AVX2.o \
-		hardnested/hardnested_bitarray_core_AVX512.o
+		hardnested/hardnested_bitarray_core_NOSIMD.o
 
 HARD_SWITCH_NOSIMD = -mno-mmx -mno-sse2 -mno-avx -mno-avx2 -mno-avx512f
 HARD_SWITCH_MMX = -mmmx -mno-sse2 -mno-avx -mno-avx2 -mno-avx512f
@@ -32,8 +22,25 @@ HARD_SWITCH_AVX = -mmmx -msse2 -mavx -mno-avx2 -mno-avx512f
 HARD_SWITCH_AVX2 = -mmmx -msse2 -mavx -mavx2 -mno-avx512f
 HARD_SWITCH_AVX512 = -mmmx -msse2 -mavx -mavx2 -mavx512f
 
+
+if X86_SIMD
+  MULTIARCHOBJS += hardnested/hardnested_bf_core_MMX.o \
+		hardnested/hardnested_bf_core_SSE2.o \
+		hardnested/hardnested_bf_core_AVX.o \
+		hardnested/hardnested_bf_core_AVX2.o \
+		hardnested/hardnested_bf_core_AVX512.o \
+		hardnested/hardnested_bitarray_core_MMX.o \
+		hardnested/hardnested_bitarray_core_SSE2.o \
+		hardnested/hardnested_bitarray_core_AVX.o \
+		hardnested/hardnested_bitarray_core_AVX2.o \
+		hardnested/hardnested_bitarray_core_AVX512.o
+
+  HARD_SWITCH = $(HARD_SWITCH_NOSIMD)
+
+endif
+
 hardnested/%_NOSIMD.o : hardnested/%.c
-	$(CC) $(DEPFLAGS) $(CFLAGS) $(HARD_SWITCH_NOSIMD) -c -o $@ $<
+	$(CC) $(DEPFLAGS) $(CFLAGS) $(HARD_SWITCH) -c -o $@ $<
 
 hardnested/%_MMX.o : hardnested/%.c
 	$(CC) $(DEPFLAGS) $(CFLAGS) $(HARD_SWITCH_MMX) -c -o $@ $<

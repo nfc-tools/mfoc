@@ -98,6 +98,80 @@
 #define COUNT_BITARRAY_AND3 count_bitarray_AND3_MMX
 #define COUNT_BITARRAY_AND4 count_bitarray_AND4_MMX
 #else
+
+
+#define malloc_bitarray_AVX512 MALLOC_BITARRAY
+#define free_bitarray_AVX512 FREE_BITARRAY
+#define bitcount_AVX512 BITCOUNT
+#define count_states_AVX512 COUNT_STATES
+#define bitarray_AND_AVX512 BITARRAY_AND
+#define bitarray_low20_AND_AVX512 BITARRAY_LOW20_AND
+#define count_bitarray_AND_AVX512 COUNT_BITARRAY_AND
+#define count_bitarray_low20_AND_AVX512 COUNT_BITARRAY_LOW20_AND
+#define bitarray_AND4_AVX512 BITARRAY_AND4
+#define bitarray_OR_AVX512 BITARRAY_OR
+#define count_bitarray_AND2_AVX512 COUNT_BITARRAY_AND2
+#define count_bitarray_AND3_AVX512 COUNT_BITARRAY_AND3
+#define count_bitarray_AND4_AVX512 COUNT_BITARRAY_AND4
+
+#define malloc_bitarray_AVX2 MALLOC_BITARRAY
+#define free_bitarray_AVX2 FREE_BITARRAY
+#define bitcount_AVX2 BITCOUNT
+#define count_states_AVX2 COUNT_STATES
+#define bitarray_AND_AVX2 BITARRAY_AND
+#define bitarray_low20_AND_AVX2 BITARRAY_LOW20_AND
+#define count_bitarray_AND_AVX2 COUNT_BITARRAY_AND
+#define count_bitarray_low20_AND_AVX2 COUNT_BITARRAY_LOW20_AND
+#define bitarray_AND4_AVX2 BITARRAY_AND4
+#define bitarray_OR_AVX2 BITARRAY_OR
+#define count_bitarray_AND2_AVX2 COUNT_BITARRAY_AND2
+#define count_bitarray_AND3_AVX2 COUNT_BITARRAY_AND3
+#define count_bitarray_AND4_AVX2 COUNT_BITARRAY_AND4
+
+#define malloc_bitarray_AVX MALLOC_BITARRAY
+#define free_bitarray_AVX FREE_BITARRAY
+#define bitcount_AVX BITCOUNT
+#define count_states_AVX COUNT_STATES
+#define bitarray_AND_AVX BITARRAY_AND
+#define bitarray_low20_AND_AVX BITARRAY_LOW20_AND
+#define count_bitarray_AND_AVX COUNT_BITARRAY_AND
+#define count_bitarray_low20_AND_AVX COUNT_BITARRAY_LOW20_AND
+#define bitarray_AND4_AVX BITARRAY_AND4
+#define bitarray_OR_AVX BITARRAY_OR
+#define count_bitarray_AND2_AVX COUNT_BITARRAY_AND2
+#define count_bitarray_AND3_AVX COUNT_BITARRAY_AND3
+#define count_bitarray_AND4_AVX COUNT_BITARRAY_AND4
+
+#define malloc_bitarray_SSE2 MALLOC_BITARRAY
+#define free_bitarray_SSE2 FREE_BITARRAY
+#define bitcount_SSE2 BITCOUNT
+#define count_states_SSE2 COUNT_STATES
+#define bitarray_AND_SSE2 BITARRAY_AND
+#define bitarray_low20_AND_SSE2 BITARRAY_LOW20_AND
+#define count_bitarray_AND_SSE2 COUNT_BITARRAY_AND
+#define count_bitarray_low20_AND_SSE2 COUNT_BITARRAY_LOW20_AND
+#define bitarray_AND4_SSE2 BITARRAY_AND4
+#define bitarray_OR_SSE2 BITARRAY_OR
+#define count_bitarray_AND2_SSE2 COUNT_BITARRAY_AND2
+#define count_bitarray_AND3_SSE2 COUNT_BITARRAY_AND3
+#define count_bitarray_AND4_SSE2 COUNT_BITARRAY_AND4
+
+
+#define malloc_bitarray_MMX MALLOC_BITARRAY
+#define free_bitarray_MMX FREE_BITARRAY
+#define bitcount_MMX BITCOUNT
+#define count_states_MMX COUNT_STATES
+#define bitarray_AND_MMX BITARRAY_AND
+#define bitarray_low20_AND_MMX BITARRAY_LOW20_AND
+#define count_bitarray_AND_MMX COUNT_BITARRAY_AND
+#define count_bitarray_low20_AND_MMX COUNT_BITARRAY_LOW20_AND
+#define bitarray_AND4_MMX BITARRAY_AND4
+#define bitarray_OR_MMX BITARRAY_OR
+#define count_bitarray_AND2_MMX COUNT_BITARRAY_AND2
+#define count_bitarray_AND3_MMX COUNT_BITARRAY_AND3
+#define count_bitarray_AND4_MMX COUNT_BITARRAY_AND4
+
+
 #define MALLOC_BITARRAY malloc_bitarray_NOSIMD
 #define FREE_BITARRAY free_bitarray_NOSIMD
 #define BITCOUNT bitcount_NOSIMD
