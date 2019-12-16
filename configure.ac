@@ -1,4 +1,4 @@
-AC_INIT([mfoc],[0.10.7],[mifare@nethemba.com])
+AC_INIT([mfoc],[0.10.8],[mifare@nethemba.com])
 
 AC_CONFIG_MACRO_DIR([m4])
 
