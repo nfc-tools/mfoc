@@ -285,6 +285,7 @@ int main(int argc, char *const argv[])
     case 0x01:
     case 0x08:
     case 0x88:
+    case 0x19:
       if (get_rats_is_2k(t, r)) {
           printf("Found Mifare Plus 2k tag\n");
           t.num_sectors = NR_TRAILERS_2k;
