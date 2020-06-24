@@ -1,6 +1,6 @@
 Format: http://dep.debian.net/deps/dep5
-Upstream-Name: MFOC
-Source: https://github.com/nfc-tools/mfoc
+Upstream-Name: MFOC-HARDNESTED
+Source: https://github.com/gelotus/mfoc-hardnested
 
 Files: *
 Copyright: 2009 Norbert Szetei
