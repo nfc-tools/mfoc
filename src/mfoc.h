@@ -1,3 +1,8 @@
+#ifndef MFOC_H__
+#define MFOC_H__
+
+#include <nfc/nfc-types.h>
+
 #define MEM_CHUNK               10000
 #define TRY_KEYS                50
 
@@ -82,7 +87,11 @@ typedef struct {
 } countKeys;
 
 
-void usage(FILE *stream, int errno);
+mftag        t;
+mfreader    r;
+
+
+void usage(FILE *stream, uint8_t errnr);
 void mf_init(mfreader *r);
 void mf_configure(nfc_device *pdi);
 void mf_select_tag(nfc_device *pdi, nfc_target *pnt);
@@ -90,7 +99,7 @@ int trailer_block(uint32_t block);
 int find_exploit_sector(mftag t);
 void mf_anticollision(mftag t, mfreader r);
 bool get_rats_is_2k(mftag t, mfreader r);
-int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d, pKeys *pk, char mode, bool dumpKeysA);
+int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d, pKeys *pk, char mode, bool dumpKeysA, uint32_t *NtEncBytes, uint8_t* parBits);
 uint32_t median(denonce d);
 int compar_int(const void *a, const void *b);
 int valid_nonce(uint32_t Nt, uint32_t NtEnc, uint32_t Ks1, uint8_t *parity);
@@ -98,3 +107,6 @@ int compar_special_int(const void *a, const void *b);
 countKeys *uniqsort(uint64_t *possibleKeys, uint32_t size);
 void num_to_bytes(uint64_t n, uint32_t len, uint8_t *dest);
 long long unsigned int bytes_to_num(uint8_t *src, uint32_t len);
+
+
+#endif

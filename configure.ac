@@ -1,4 +1,4 @@
-AC_INIT([mfoc],[0.10.7],[mifare@nethemba.com])
+AC_INIT([mfoc-hardnested],[0.10.9],[mifare@nethemba.com])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -6,7 +6,9 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_SRCDIR([src/mfoc.c])
 
-AM_INIT_AUTOMAKE(dist-bzip2 no-dist-gzip)
+AM_INIT_AUTOMAKE([dist-bzip2 no-dist-gzip subdir-objects])
+CFLAGS="$CFLAGS -O3"
+AX_CFLAGS_WARN_ALL
 
 AC_PROG_CC
 
@@ -15,6 +17,10 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 # Checks for pkg-config modules.
 LIBNFC_REQUIRED_VERSION=1.7.0
 PKG_CHECK_MODULES([libnfc], [libnfc >= $LIBNFC_REQUIRED_VERSION], [], [AC_MSG_ERROR([libnfc >= $LIBNFC_REQUIRED_VERSION is mandatory.])])
+
+PKG_CHECK_MODULES([liblzma], [liblzma], LIBS="$LIBS -llzma", [AC_MSG_ERROR([liblzma is mandatory.])])
+ACX_PTHREAD(LIBS="$LIBS $PTHREAD_CFLAGS", [AC_MSG_ERROR([pthread is mandatory.])])
+AC_CHECK_LIB(m, log, LIBS="$LIBS -lm", [AC_MSG_ERROR([math is mandatory.])])
 
 PKG_CONFIG_REQUIRES="libnfc"
 AC_SUBST([PKG_CONFIG_REQUIRES])
@@ -34,8 +40,27 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset])
 
+# x86 CPU features (without automatic gcc flags)
+AC_CANONICAL_HOST
+X86_SIMD=""
+AS_CASE([$host_cpu],
+    [x86_64],
+    [
+        X86_SIMD="true"
+    ],
+    [i?86],
+    [
+        X86_SIMD="true"
+    ],
+    [amd64],
+    [
+        X86_SIMD="true"
+    ],)
+AC_SUBST([X86_SIMD])
+AM_CONDITIONAL([X86_SIMD], [test x$X86_SIMD = xtrue])
+
 # C99
-CFLAGS="$CFLAGS -std=c99"
+CFLAGS="$CFLAGS -DX86_SIMD -std=c99"
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])

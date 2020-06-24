@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="C files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="mfoc.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="cmdhfmfhard.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="crapto1.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="crypto1.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="mifare.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="nfc-utils.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="parity.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="util_posix.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="getopt.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdlib.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bf_core_AVX.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bf_core_AVX2.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bf_core_AVX512.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bf_core_SSE2.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bitarray_core_AVX.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bitarray_core_AVX2.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bitarray_core_AVX512.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bitarray_core_SSE2.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bruteforce.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_cpu_dispatch.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="hardnested\tables.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+    <ClCompile Include="util.c">
+      <Filter>C files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cmdhfmfhard.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="crapto1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="mfoc.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="mifare.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="nfc-utils.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="parity.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="slre.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="ui.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="util_posix.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="getopt.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="unistd.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="bf_bench_data.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="hardnested\hardnested_bruteforce.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="hardnested\hardnested_cpu_dispatch.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="hardnested\tables.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="config_w.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

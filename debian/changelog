@@ -1,3 +1,9 @@
+mfoc-hardnested (0.10.9) unstable; urgency=medium
+
+  * New upstream version 0.10.9
+
+ -- gelotus <gelotus@github.com>  Wed, 24 Jun 2020 01:19:50 -0300
+ 
 mfoc (0.10.7+git20180724-1) unstable; urgency=medium
 
   * New upstream version 0.10.7+git20180724
