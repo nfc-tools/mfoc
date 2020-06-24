@@ -44,6 +44,7 @@
 #  include <stdlib.h>
 #  include <string.h>
 #  include <err.h>
+#  include <nfc/nfc-types.h>
 
 /**
  * @macro DBG

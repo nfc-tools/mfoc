@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cmdhfmfhard.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="crapto1.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="crypto1.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="getopt.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bf_core_AVX.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mavx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bf_core_AVX2.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mavx -mavx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bf_core_AVX512.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mavx -mavx2 -mavx512f %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bf_core_SSE2.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bitarray_core_AVX.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mavx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bitarray_core_AVX2.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mavx -mavx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bitarray_core_AVX512.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mavx -mavx2 -mavx512f %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">AdvancedVectorExtensions512</EnableEnhancedInstructionSet>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bitarray_core_SSE2.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_bruteforce.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="hardnested\hardnested_cpu_dispatch.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="hardnested\tables.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="mfoc.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="mifare.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="nfc-utils.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="parity.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="stdlib.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="ui.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="util.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <ClCompile Include="util_posix.c">
+      <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bf_bench_data.h" />
+    <ClInclude Include="cmdhfmfhard.h" />
+    <ClInclude Include="config_w.h" />
+    <ClInclude Include="crapto1.h" />
+    <ClInclude Include="getopt.h" />
+    <ClInclude Include="hardnested\hardnested_bruteforce.h" />
+    <ClInclude Include="hardnested\hardnested_cpu_dispatch.h" />
+    <ClInclude Include="hardnested\tables.h" />
+    <ClInclude Include="mfoc.h" />
+    <ClInclude Include="mifare.h" />
+    <ClInclude Include="nfc-utils.h" />
+    <ClInclude Include="parity.h" />
+    <ClInclude Include="slre.h" />
+    <ClInclude Include="ui.h" />
+    <ClInclude Include="unistd.h" />
+    <ClInclude Include="util.h" />
+    <ClInclude Include="util_posix.h" />
+    <ClInclude Include="windows.h" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{24ea25a3-9008-44c1-83dd-4a81d02fc478}</ProjectGuid>
+    <RootNamespace>mfochardnested</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>ClangCL</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    <VCToolsVersion>
+    </VCToolsVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>.\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;NOGDI;_AMD64_;_CRT_SECURE_NO_WARNINGS;CONFFILES;DRIVER_ACR122S_ENABLED;DRIVER_ACR122_USB_ENABLED;DRIVER_ARYGON_ENABLED;DRIVER_PN532_UART_ENABLED;DRIVER_PN53X_USB_ENABLED;ENVVARS;HAVE_CONFIG_H;LOG;u_int16_t=uint16_t;u_int8_t=uint8_t;WIN32;_WINDOWS;W3;MD;__PTW32_CLEANUP_SEH;LZMA_API_STATIC;__x86_64__;HAVE_ERRNO_H;WIN64;_WIN64;__PTW32_STATIC_LIB;_CRT_SECURE_NO_DEPRECATE;__PTW32_RC_MSC;__PTW32_ARCHX64;X86_SIMD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>false</ConformanceMode>
+      <LanguageStandard>Default</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <ExceptionHandling>false</ExceptionHandling>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalOptions>-mmmx -msse2 -mno-avx -mno-avx2 -mno-avx512f %(AdditionalOptions)</AdditionalOptions>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>lib\liblzma.lib;lib\libpthreadVSE3.lib;lib\libusb.lib;lib\nfc.lib</AdditionalDependencies>
+      <EnableUAC>false</EnableUAC>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib</IgnoreSpecificDefaultLibraries>
+    </Link>
+    <PostBuildEvent>
+      <Command>rd /s /q $(SolutionDir)dist
+md $(SolutionDir)dist\$(ProjectName)
+copy $(SolutionDir)$(Platform)\$(Configuration)\$(ProjectName).exe $(SolutionDir)dist\$(ProjectName)
+copy $(SolutionDir)src\lib\*.dll $(SolutionDir)dist\$(ProjectName)
+powershell Compress-Archive $(SolutionDir)dist\$(ProjectName) $(SolutionDir)dist\$(ProjectName).zip</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

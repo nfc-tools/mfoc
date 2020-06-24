@@ -28,11 +28,7 @@ extern "C" {
     struct Crypto1State {
         uint32_t odd, even;
     };
-#if defined(__arm__) && !defined(__linux__) && !defined(_WIN32) && !defined(__APPLE__)  // bare metal ARM Proxmark lacks malloc()/free()
-    void crypto1_create(struct Crypto1State *s, uint64_t key);
-#else
     struct Crypto1State *crypto1_create(uint64_t key);
-#endif
     void crypto1_destroy(struct Crypto1State*);
     void crypto1_get_lfsr(struct Crypto1State*, uint64_t*);
     uint8_t crypto1_bit(struct Crypto1State*, uint8_t, int);
@@ -52,16 +48,6 @@ extern "C" {
     uint32_t lfsr_rollback_word(struct Crypto1State* s, uint32_t in, int fb);
     int nonce_distance(uint32_t from, uint32_t to);
     bool validate_prng_nonce(uint32_t nonce);
-#define FOREACH_VALID_NONCE(N, FILTER, FSIZE)\
-	uint32_t __n = 0,__M = 0, N = 0;\
-	int __i;\
-	for(; __n < 1 << 16; N = prng_successor(__M = ++__n, 16))\
-		for(__i = FSIZE - 1; __i >= 0; __i--)\
-			if(BIT(FILTER, __i) ^ evenparity32(__M & 0xFF01))\
-				break;\
-			else if(__i)\
-				__M = prng_successor(__M, (__i == 7) ? 48 : 8);\
-			else 
 
 #define LF_POLY_ODD (0x29CE5C)
 #define LF_POLY_EVEN (0x870804)

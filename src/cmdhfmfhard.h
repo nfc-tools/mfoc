@@ -22,6 +22,12 @@ typedef enum {
     ODD_STATE = 1
 } odd_even_t;
 
+typedef enum {
+    TO_BE_DONE,
+    WORK_IN_PROGRESS,
+    COMPLETED
+} work_status_t;
+
 typedef struct guess_sum_a8 {
     float prob;
     uint64_t num_states;
@@ -49,7 +55,6 @@ typedef struct noncelist {
 
 int mfnestedhard(uint8_t blockNo, uint8_t keyType, uint8_t *key, uint8_t trgBlockNo, uint8_t trgKeyType);
 void hardnested_print_progress(uint32_t nonces, char *activity, float brute_force, uint64_t min_diff_print_time, uint8_t trgKeyBlock, uint8_t trgKeyType, bool newline);
-const char *get_my_executable_directory();
 
 #endif
 

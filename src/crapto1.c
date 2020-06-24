@@ -22,17 +22,6 @@
 #include <stdlib.h>
 #include "parity.h"
 
-#if !defined LOWMEM && defined __GNUC__
-static uint8_t filterlut[1 << 20];
-
-static void __attribute__((constructor)) fill_lut() {
-    uint32_t i;
-    for (i = 0; i < 1 << 20; ++i)
-        filterlut[i] = filter(i);
-}
-#define filter(x) (filterlut[(x) & 0xfffff])
-#endif
-
 typedef struct bucket {
     uint32_t *head;
     uint32_t *bp;
@@ -93,21 +82,6 @@ static void bucket_sort_intersect(uint32_t * const estart, uint32_t * const esto
         bucket_info->numbuckets = nonempty_bucket;
     }
 }
-/** binsearch
- * Binary search for the first occurence of *stop's MSB in sorted [start,stop]
- */
-/* static inline uint32_t* binsearch(uint32_t *start, uint32_t *stop)
-{
-        uint32_t mid, val = *stop & 0xff000000;
-        while(start != stop)
-                if(start[mid = (stop - start) >> 1] > val)
-                        stop = &start[mid];
-                else
-                        start += mid + 1;
-
-        return start;
-}
- */
 
 /** update_contribution
  * helper, calculates the partial linear feedback contributions and puts in MSB

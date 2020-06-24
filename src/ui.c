@@ -10,22 +10,19 @@
 //-----------------------------------------------------------------------------
 
 #include <stdbool.h>
-#ifndef EXTERNAL_PRINTANDLOG
 #include <stdio.h>
 #include <stdarg.h>
 #include <pthread.h>
-#endif
 
 #include "ui.h"
 
 bool lastnewl = true;
 
-#ifndef EXTERNAL_PRINTANDLOG
 static pthread_mutex_t print_lock = PTHREAD_MUTEX_INITIALIZER;
 
 void PrintAndLog(bool newl, char *fmt, ...) {
     va_list argptr, argptr2;
-
+    pthread_mutex_init(&print_lock, NULL);
     // lock this section to avoid interlacing prints from different threads
     pthread_mutex_lock(&print_lock);
     
@@ -51,5 +48,5 @@ void PrintAndLog(bool newl, char *fmt, ...) {
     //release lock
     pthread_mutex_unlock(&print_lock);
 }
-#endif
+
 

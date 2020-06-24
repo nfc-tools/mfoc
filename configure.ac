@@ -1,4 +1,4 @@
-AC_INIT([mfoc],[0.10.8],[mifare@nethemba.com])
+AC_INIT([mfoc-hardnested],[0.10.9],[mifare@nethemba.com])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -60,7 +60,7 @@ AC_SUBST([X86_SIMD])
 AM_CONDITIONAL([X86_SIMD], [test x$X86_SIMD = xtrue])
 
 # C99
-CFLAGS="$CFLAGS -std=c99"
+CFLAGS="$CFLAGS -DX86_SIMD -std=c99"
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])

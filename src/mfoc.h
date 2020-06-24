@@ -91,7 +91,7 @@ mftag        t;
 mfreader    r;
 
 
-void usage(FILE *stream, int errno);
+void usage(FILE *stream, uint8_t errnr);
 void mf_init(mfreader *r);
 void mf_configure(nfc_device *pdi);
 void mf_select_tag(nfc_device *pdi, nfc_target *pnt);
