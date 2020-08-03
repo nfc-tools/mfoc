@@ -684,7 +684,9 @@ int main(int argc, char *const argv[])
           failure = false;
         } else {
           // Error, now try read() with B key
-          if (res != NFC_ERFTRANS) {
+          if (res != NFC_EMFCAUTHFAIL) {
+            fprintf(stdout, "Failed reading with Key A after successfully testing Key A. This is unusual, but continuing anyway in case Key B succeeds...");
+          } else if (res != NFC_ERFTRANS) {
             nfc_perror(r.pdi, "nfc_initiator_mifare_cmd");
             goto error;
           }
