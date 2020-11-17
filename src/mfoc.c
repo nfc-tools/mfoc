@@ -915,6 +915,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
   // Possible key counter, just continue with a previous "session"
   uint32_t kcount = pk->size;
 
+  uint8_t Nr[4] = { 0x00, 0x00, 0x00, 0x00 }; // Reader nonce
   uint8_t Auth[4] = { 0x00, t.sectors[e_sector].trailer, 0x00, 0x00 };
   uint8_t AuthEnc[4] = { 0x00, t.sectors[e_sector].trailer, 0x00, 0x00 };
   uint8_t AuthEncPar[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
