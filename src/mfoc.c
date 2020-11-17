@@ -95,18 +95,18 @@ int main(int argc, char *const argv[])
   // Array with default Mifare Classic keys
   uint8_t defaultKeys[][6] = {
     {0xff, 0xff, 0xff, 0xff, 0xff, 0xff}, // Default key (first key used by program if no user defined key)
-    {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
-    {0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
-    {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // Blank key
-    {0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5},
-    {0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd},
-    {0x1a, 0x98, 0x2c, 0x7e, 0x45, 0x9a},
-    {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
-    {0x71, 0x4c, 0x5c, 0x88, 0x6e, 0x97},
-    {0x58, 0x7e, 0xe5, 0xf9, 0x35, 0x0f},
-    {0xa0, 0x47, 0x8c, 0xc3, 0x90, 0x91},
-    {0x53, 0x3c, 0xb6, 0xc7, 0x23, 0xf6},
-    {0x8f, 0xd0, 0xa4, 0xf2, 0x56, 0xe9}
+    // {0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5}, // NFCForum MAD key
+    // {0xd3, 0xf7, 0xd3, 0xf7, 0xd3, 0xf7}, // NFCForum content key
+    // {0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // Blank key
+    // {0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5},
+    // {0x4d, 0x3a, 0x99, 0xc3, 0x51, 0xdd},
+    // {0x1a, 0x98, 0x2c, 0x7e, 0x45, 0x9a},
+    // {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff},
+    // {0x71, 0x4c, 0x5c, 0x88, 0x6e, 0x97},
+    // {0x58, 0x7e, 0xe5, 0xf9, 0x35, 0x0f},
+    // {0xa0, 0x47, 0x8c, 0xc3, 0x90, 0x91},
+    // {0x53, 0x3c, 0xb6, 0xc7, 0x23, 0xf6},
+    // {0x8f, 0xd0, 0xa4, 0xf2, 0x56, 0xe9}
 
   };
 
@@ -147,7 +147,7 @@ int main(int argc, char *const argv[])
           ERR("The number of probes must be a positive number");
           exit(EXIT_FAILURE);
         }
-        // fprintf(stdout, "Number of probes: %d\n", probes);
+        fprintf(stdout, "Number of probes: %d\n", probes);
         break;
       case 'T': {
         int res;
@@ -157,7 +157,7 @@ int main(int argc, char *const argv[])
           exit(EXIT_FAILURE);
         }
         d.tolerance = (uint32_t)res;
-        // fprintf(stdout, "Tolerance number: %d\n", probes);
+        fprintf(stdout, "Tolerance number: %d\n", probes);
       }
       break;
     case 'f':
@@ -213,7 +213,7 @@ int main(int argc, char *const argv[])
           fprintf(stderr, "Cannot open: %s, exiting\n", optarg);
           exit(EXIT_FAILURE);
         }
-        // fprintf(stdout, "Output file: %s\n", optarg);
+        fprintf(stdout, "Output file: %s\n", optarg);
         break;
       case 'h':
         usage(stdout, 0);
@@ -232,29 +232,7 @@ int main(int argc, char *const argv[])
   // Initialize reader/tag structures
   mf_init(&r);
 
-  if (nfc_initiator_init(r.pdi) < 0) {
-    nfc_perror(r.pdi, "nfc_initiator_init");
-    goto error;
-  }
-  // Drop the field for a while, so can be reset
-  if (nfc_device_set_property_bool(r.pdi, NP_ACTIVATE_FIELD, true) < 0) {
-    nfc_perror(r.pdi, "nfc_device_set_property_bool activate field");
-    goto error;
-  }
-  // Let the reader only try once to find a tag
-  if (nfc_device_set_property_bool(r.pdi, NP_INFINITE_SELECT, false) < 0) {
-    nfc_perror(r.pdi, "nfc_device_set_property_bool infinite select");
-    goto error;
-  }
-  // Configure the CRC and Parity settings
-  if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_CRC, true) < 0) {
-    nfc_perror(r.pdi, "nfc_device_set_property_bool crc");
-    goto error;
-  }
-  if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_PARITY, true) < 0) {
-    nfc_perror(r.pdi, "nfc_device_set_property_bool parity");
-    goto error;
-  }
+  mf_configure(r.pdi);
 
   /*
       // wait for tag to appear
@@ -285,6 +263,7 @@ int main(int argc, char *const argv[])
     case 0x01:
     case 0x08:
     case 0x88:
+    case 0x28:
       if (get_rats_is_2k(t, r)) {
           printf("Found Mifare Plus 2k tag\n");
           t.num_sectors = NR_TRAILERS_2k;
@@ -575,7 +554,7 @@ int main(int argc, char *const argv[])
             // We don't known this key, try to break it
             // This key can be found here two or more times
             if (ck[i].count > 0) {
-              // fprintf(stdout,"%d %llx\n",ck[i].count, ck[i].key);
+              fprintf(stdout,"%d %llx\n",ck[i].count, ck[i].key);
               // Set required authetication method
               num_to_bytes(ck[i].key, 6, mp.mpa.abtKey);
               mc = dumpKeysA ? MC_AUTH_A : MC_AUTH_B;
@@ -819,6 +798,11 @@ void mf_configure(nfc_device *pdi)
     nfc_perror(pdi, "nfc_device_set_property_bool parity");
     exit(EXIT_FAILURE);
   }
+  // Disable ISO14443-4 switching in order to read devices that emulate Mifare Classic with ISO14443-4 compliance.
+  if (nfc_device_set_property_bool(pdi, NP_AUTO_ISO14443_4, false) < 0) {
+    nfc_perror(pdi, "nfc_device_set_property_bool");
+    exit(EXIT_FAILURE);
+  }
   // Enable the field so more power consuming cards can power themselves up
   if (nfc_device_set_property_bool(pdi, NP_ACTIVATE_FIELD, true) < 0) {
     nfc_perror(pdi, "nfc_device_set_property_bool activate field");
@@ -915,6 +899,7 @@ get_rats_is_2k(mftag t, mfreader r)
             && (abtRx[7] == 0x2f) && (abtRx[8] == 0x2f)
             && ((t.nt.nti.nai.abtAtqa[1] & 0x02) == 0x00));
   } else {
+    printf("ATS len = %d\n", res);
     return false;
   }
 }
@@ -930,7 +915,6 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
   // Possible key counter, just continue with a previous "session"
   uint32_t kcount = pk->size;
 
-  uint8_t Nr[4] = { 0x00, 0x00, 0x00, 0x00 }; // Reader nonce
   uint8_t Auth[4] = { 0x00, t.sectors[e_sector].trailer, 0x00, 0x00 };
   uint8_t AuthEnc[4] = { 0x00, t.sectors[e_sector].trailer, 0x00, 0x00 };
   uint8_t AuthEncPar[8] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
@@ -944,13 +928,14 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
   uint32_t Nt, NtLast, NtProbe, NtEnc, Ks1;
 
   int i;
+  int res;
   uint32_t m;
 
   // Prepare AUTH command
   Auth[0] = (t.sectors[e_sector].foundKeyA) ? MC_AUTH_A : MC_AUTH_B;
   iso14443a_crc_append(Auth, 2);
-  // fprintf(stdout, "\nAuth command:\t");
-  // print_hex(Auth, 4);
+  fprintf(stdout, "\nMode: %c, Auth command:\t", mode);
+  print_hex(Auth, 4);
 
   // We need full control over the CRC
   if (nfc_device_set_property_bool(r.pdi, NP_HANDLE_CRC, false) < 0)  {
@@ -965,8 +950,8 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
     exit(EXIT_FAILURE);
   }
 
-  if (nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, sizeof(Rx), 0) < 0) {
-    fprintf(stdout, "Error while requesting plain tag-nonce\n");
+  if ((res = nfc_initiator_transceive_bytes(r.pdi, Auth, 4, Rx, sizeof(Rx), 0)) < 0) {
+    fprintf(stdout, "Error while requesting plain tag-nonce, %d\n", res);
     exit(EXIT_FAILURE);
   }
 
@@ -974,10 +959,10 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
     nfc_perror(r.pdi, "nfc_device_set_property_bool");
     exit(EXIT_FAILURE);
   }
-  // print_hex(Rx, 4);
+  print_hex(Rx, res);
 
   // Save the tag nonce (Nt)
-  Nt = bytes_to_num(Rx, 4);
+  Nt = bytes_to_num(Rx, res);
 
   // Init the cipher with key {0..47} bits
   if (t.sectors[e_sector].foundKeyA) {
@@ -987,7 +972,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
   }
 
   // Load (plain) uid^nt into the cipher {48..79} bits
-  crypto1_word(pcs, bytes_to_num(Rx, 4) ^ t.authuid, 0);
+  crypto1_word(pcs, bytes_to_num(Rx, res) ^ t.authuid, 0);
 
   // Generate (encrypted) nr+parity by loading it into the cipher
   for (i = 0; i < 4; i++) {
@@ -1013,17 +998,16 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
   }
 
   // Transmit reader-answer
-  // fprintf(stdout, "\t{Ar}:\t");
-  // print_hex_par(ArEnc, 64, ArEncPar);
-  int res;
+  fprintf(stdout, "\t{Ar}:\t");
+  print_hex_par(ArEnc, 64, ArEncPar);
   if (((res = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, sizeof(Rx), RxPar)) < 0) || (res != 32)) {
     ERR("Reader-answer transfer error, exiting..");
     exit(EXIT_FAILURE);
   }
 
   // Now print the answer from the tag
-  // fprintf(stdout, "\t{At}:\t");
-  // print_hex_par(Rx,RxLen,RxPar);
+  fprintf(stdout, "\t{At}:\t");
+  print_hex_par(Rx,res,RxPar);
 
   // Decrypt the tag answer and verify that suc3(Nt) is At
   Nt = prng_successor(Nt, 32);
@@ -1031,12 +1015,12 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
     ERR("[At] is not Suc3(Nt), something is wrong, exiting..");
     exit(EXIT_FAILURE);
   }
-  // fprintf(stdout, "Authentication completed.\n\n");
+  fprintf(stdout, "Authentication completed.\n\n");
 
   // If we are in "Get Distances" mode
   if (mode == 'd') {
     for (m = 0; m < d->num_distances; m++) {
-      // fprintf(stdout, "Nested Auth number: %x: ,", m);
+      fprintf(stdout, "Nested Auth number: %x\n", m);
       // Encrypt Auth command with the current keystream
       for (i = 0; i < 4; i++) {
         AuthEnc[i] = crypto1_byte(pcs, 0x00, 0) ^ Auth[i];
@@ -1044,11 +1028,17 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
         AuthEncPar[i] = filter(pcs->odd) ^ oddparity(Auth[i]);
       }
 
+      fprintf(stdout, "\t{AuthEnc}:\t");
+      print_hex_par(AuthEnc, 64, AuthEncPar);
+
       // Sending the encrypted Auth command
-      if (nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar, Rx, sizeof(Rx), RxPar) < 0) {
+      if ((res = nfc_initiator_transceive_bits(r.pdi, AuthEnc, 32, AuthEncPar, Rx, sizeof(Rx), RxPar)) < 0) {
         fprintf(stdout, "Error requesting encrypted tag-nonce\n");
         exit(EXIT_FAILURE);
       }
+
+      fprintf(stdout, "\t{AuthEnResp}:\t");
+      print_hex_par(Rx,res,RxPar);
 
       // Decrypt the encrypted auth
       if (t.sectors[e_sector].foundKeyA) {
@@ -1078,6 +1068,11 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
         ArEncPar[i] = filter(pcs->odd) ^ oddparity(Nt);
       }
       nfc_device_set_property_bool(r.pdi, NP_HANDLE_PARITY, false);
+
+      // Transmit reader-answer
+      fprintf(stdout, "\t{Ar}:\t");
+      print_hex_par(ArEnc, 64, ArEncPar);
+
       if (((res = nfc_initiator_transceive_bits(r.pdi, ArEnc, 64, ArEncPar, Rx, sizeof(Rx), RxPar)) < 0) || (res != 32)) {
         ERR("Reader-answer transfer error, exiting..");
         exit(EXIT_FAILURE);
@@ -1087,11 +1082,15 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
         ERR("[At] is not Suc3(Nt), something is wrong, exiting..");
         exit(EXIT_FAILURE);
       }
+
+        // Now print the answer from the tag
+        fprintf(stdout, "\t{At}:\t");
+        print_hex_par(Rx,res,RxPar);
     } // Next auth probe
 
     // Find median from all distances
     d->median = median(*d);
-    //fprintf(stdout, "Median: %05d\n", d->median);
+    fprintf(stdout, "Median: %05d\n", d->median);
   } // The end of Get Distances mode
 
   // If we are in "Get Recovery" mode
@@ -1132,7 +1131,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
     }
 
     // Iterate over Nt-x, Nt+x
-    // fprintf(stdout, "Iterate from %d to %d\n", d->median-TOLERANCE, d->median+TOLERANCE);
+    fprintf(stdout, "Iterate from %d to %d\n", d->median-d->tolerance, d->median+d->tolerance);
     NtProbe = prng_successor(Nt, d->median - d->tolerance);
     for (m = d->median - d->tolerance; m <= d->median + d->tolerance; m += 2) {
 
@@ -1153,7 +1152,7 @@ int mf_enhanced_auth(int e_sector, int a_sector, mftag t, mfreader r, denonce *d
           // Allocate a new space for keys
           if (((kcount % MEM_CHUNK) == 0) || (kcount >= pk->size)) {
             pk->size += MEM_CHUNK;
-            // fprintf(stdout, "New chunk by %d, sizeof %lu\n", kcount, pk->size * sizeof(uint64_t));
+            fprintf(stdout, "New chunk by %d, sizeof %lu\n", kcount, pk->size * sizeof(uint64_t));
             pk->possibleKeys = (uint64_t *) realloc((void *)pk->possibleKeys, pk->size * sizeof(uint64_t));
             if (pk->possibleKeys == NULL) {
               ERR("Memory allocation error for pk->possibleKeys");
