@@ -113,6 +113,10 @@ int main(int argc, char *const argv[])
   mftag        t;
   mfreader    r;
   denonce        d = {NULL, 0, DEFAULT_DIST_NR, DEFAULT_TOLERANCE, {0x00, 0x00, 0x00}};
+  
+  // Pointer to target sectors
+  uint8_t	*ts = NULL;
+  uint8_t	scount = 1;
 
   // Pointers to possible keys
   pKeys        *pk;
@@ -199,6 +203,24 @@ int main(int argc, char *const argv[])
         defKeys_len = defKeys_len + 6;
 
         break;
+      case 's': {
+		char *sval;
+	    i = 0;
+	    for (i = 0; optarg[i] != '\0'; i++) {
+		  if (optarg[i] == ',') {
+		    scount++;
+		  }
+		}
+	    if ((ts = (uint8_t *) malloc(scount*sizeof(uint8_t))) == NULL) {
+          ERR("Cannot allocate memory for ts");
+          goto error;
+        }
+		for (i = 0; sval=strtok(optarg,","); i++) {
+		  ts[i] = atoi(sval);
+		  optarg = NULL;
+		}
+	  }
+		break;
       case 'O':
         // File output
         if (!(pfDump = fopen(optarg, "wb"))) {
@@ -477,7 +499,7 @@ int main(int argc, char *const argv[])
     if (e_sector == -1) break; // All keys are default, I am skipping recovery mode
     for (j = 0; j < (t.num_sectors); ++j) {
       memcpy(mp.mpa.abtAuthUid, t.nt.nti.nai.abtUid + t.nt.nti.nai.szUidLen - 4, sizeof(mp.mpa.abtAuthUid));
-      if ((dumpKeysA && !t.sectors[j].foundKeyA) || (!dumpKeysA && !t.sectors[j].foundKeyB)) {
+      if ((ts == NULL || is_in_array(j, ts, scount)) && ((dumpKeysA && !t.sectors[j].foundKeyA) || (!dumpKeysA && !t.sectors[j].foundKeyB))) {
 
         // First, try already broken keys
         skip = false;
@@ -650,7 +672,7 @@ int main(int argc, char *const argv[])
 
 
   for (i = 0; i < (t.num_sectors); ++i) {
-    if ((dumpKeysA && !t.sectors[i].foundKeyA) || (!dumpKeysA && !t.sectors[i].foundKeyB)) {
+    if ((ts == NULL || is_in_array(i, ts, scount)) && ((dumpKeysA && !t.sectors[i].foundKeyA) || (!dumpKeysA && !t.sectors[i].foundKeyB))) {
       fprintf(stdout, "\nTry again, there are still some encrypted blocks\n");
       succeed = 0;
       break;
@@ -755,7 +777,7 @@ error:
 
 void usage(FILE *stream, int errno)
 {
-  fprintf(stream, "Usage: mfoc [-h] [-k key] [-f file] ... [-P probnum] [-T tolerance] [-O output]\n");
+  fprintf(stream, "Usage: mfoc [-h] [-k key] [-f file] ... [-P probnum] [-T tolerance] [-s sectors] [-O output]\n");
   fprintf(stream, "\n");
   fprintf(stream, "  h     print this help and exit\n");
 //    fprintf(stream, "  B     instead of 'A' dump 'B' keys\n");
@@ -765,7 +787,7 @@ void usage(FILE *stream, int errno)
 //    fprintf(stream, "  S     number of sets with keystreams, default is 5\n");
   fprintf(stream, "  P     number of probes per sector, instead of default of 20\n");
   fprintf(stream, "  T     nonce tolerance half-range, instead of default of 20\n        (i.e., 40 for the total range, in both directions)\n");
-//    fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
+  fprintf(stream, "  s     specify the list of sectors to crack, for example -s 0,1,3,5\n");
   fprintf(stream, "  O     file in which the card contents will be written (REQUIRED)\n");
   fprintf(stream, "  D     file in which partial card info will be written in case PRNG is not vulnerable\n");
   fprintf(stream, "\n");
@@ -1262,4 +1284,13 @@ long long unsigned int bytes_to_num(uint8_t *src, uint32_t len)
     src++;
   }
   return num;
+}
+
+bool is_in_array(int val, uint8_t *arr, uint8_t size) {
+  int i;
+  for (i = 0; i < size; i++) {
+    if (arr[i] == val)
+      return true;
+  }
+  return false;
 }
