@@ -35,7 +35,7 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memset])
 
 # C99
-CFLAGS="$CFLAGS -std=c99"
+CFLAGS="$CFLAGS -std=c99 -O3 -Wall"
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
