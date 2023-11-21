@@ -783,14 +783,49 @@ void mf_init(mfreader *r)
 {
   // Connect to the first NFC device
   nfc_init(&context);
+
   if (context == NULL) {
     ERR("Unable to init libnfc (malloc)");
     exit(EXIT_FAILURE);
   }
-  r->pdi = nfc_open(context, NULL);
-  if (!r->pdi) {
-    printf("No NFC device found.\n");
+
+  nfc_connstring connstrings[10];
+  const size_t numconstrings = 10;
+  int num_devices = nfc_list_devices(context,connstrings,numconstrings);
+
+  if(num_devices == 1)
+  {
+    r->pdi = nfc_open(context, NULL);
+    if (!r->pdi) {
+      printf("No NFC device found.\n");
+      exit(EXIT_FAILURE);
+    }
+  }
+  else
+  {
+    printf("multiple readers found\n");
+    //get a specific device
+    for(int n=0;n<num_devices;n++)
+    {
+      printf("[%d] %s\n",n,connstrings[n]);
+    }
+    printf("please select the reader to use\n");
+
+    int userselected = 0;
+    if(scanf("%d",&userselected) > 0);
+      if(userselected >= 0 && userselected < num_devices)
+      {
+        r->pdi = nfc_open(context,connstrings[userselected]);
+        if (!r->pdi) {
+          printf("Unable to open selected device\n");
+          exit(EXIT_FAILURE);
+        }
+          return;
+      }
+    
+    printf("Invalid selection\n");
     exit(EXIT_FAILURE);
+
   }
 }
 
