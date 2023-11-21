@@ -443,27 +443,25 @@ int main(int argc, char *const argv[])
 
   fprintf(stdout, "\n");
   for (i = 0; i < (t.num_sectors); ++i) {
-    if(t.sectors[i].foundKeyA){
-      fprintf(stdout, "Sector %02d - Found   Key A: %012llx ", i, bytes_to_num(t.sectors[i].KeyA, sizeof(t.sectors[i].KeyA)));
-      memcpy(&knownKey, t.sectors[i].KeyA, 6);
+    if (t.sectors[i].foundKeyA) {
+      knownKey = bytes_to_num(t.sectors[i].KeyA, sizeof(t.sectors[i].KeyA));
+      fprintf(stdout, "Sector %02d - Found   Key A: %012llx ", i, knownKey);
       knownKeyLetter = 'A';
       knownSector = i;
-    }
-    else{
+    } else {
       fprintf(stdout, "Sector %02d - Unknown Key A               ", i);
-      unknownSector = i;
       unknownKeyLetter = 'A';
-    }
-    if(t.sectors[i].foundKeyB){
-      fprintf(stdout, "Found   Key B: %012llx\n", bytes_to_num(t.sectors[i].KeyB, sizeof(t.sectors[i].KeyB)));
-      knownKeyLetter = 'B';
-      memcpy(&knownKey, t.sectors[i].KeyB, 6);
-      knownSector = i;
-    }
-    else{
-      fprintf(stdout, "Unknown Key B\n");
       unknownSector = i;
+    }
+    if (t.sectors[i].foundKeyB) {
+      knownKey = bytes_to_num(t.sectors[i].KeyB, sizeof(t.sectors[i].KeyB));
+      fprintf(stdout, "Found   Key B: %012llx\n", knownKey);
+      knownKeyLetter = 'B';
+      knownSector = i;
+    } else {
+      fprintf(stdout, "Unknown Key B\n");
       unknownKeyLetter = 'B';
+      unknownSector = i;
     }
   }
   fflush(stdout);
