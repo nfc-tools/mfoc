@@ -753,7 +753,7 @@ error:
   exit(EXIT_FAILURE);
 }
 
-void usage(FILE *stream, int errno)
+void usage(FILE *stream, int exit_code)
 {
   fprintf(stream, "Usage: mfoc [-h] [-k key] [-f file] ... [-P probnum] [-T tolerance] [-O output]\n");
   fprintf(stream, "\n");
@@ -776,7 +776,7 @@ void usage(FILE *stream, int errno)
   fprintf(stream, "\n");
   fprintf(stream, "This is mfoc version %s.\n", PACKAGE_VERSION);
   fprintf(stream, "For more information, run: 'man mfoc'.\n");
-  exit(errno);
+  exit(exit_code);
 }
 
 void mf_init(mfreader *r)

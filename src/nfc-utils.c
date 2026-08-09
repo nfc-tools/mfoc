@@ -37,7 +37,6 @@
  * @brief Provide some examples shared functions like print, parity calculation, options parsing.
  */
 #include <nfc/nfc.h>
-#include <err.h>
 
 #include "nfc-utils.h"
 
