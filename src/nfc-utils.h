@@ -43,7 +43,20 @@
 
 #  include <stdlib.h>
 #  include <string.h>
-#  include <err.h>
+#  ifdef _WIN32
+#    include <stdio.h>
+#    include <stdarg.h>
+static inline void warnx(const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+  fprintf(stderr, "\n");
+}
+#  else
+#    include <err.h>
+#  endif
 
 /**
  * @macro DBG
